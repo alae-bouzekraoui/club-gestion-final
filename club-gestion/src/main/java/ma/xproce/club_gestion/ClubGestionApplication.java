@@ -1,18 +1,36 @@
 package ma.xproce.club_gestion;
 
 import ma.xproce.club_gestion.dao.entities.Club;
+import ma.xproce.club_gestion.dao.entities.Utilisateur;
 import ma.xproce.club_gestion.dao.repositories.ClubRepository;
+import ma.xproce.club_gestion.dao.repositories.UtilisateurRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class ClubGestionApplication {
+public class ClubGestionApplication implements CommandLineRunner {
 
+    @Autowired
+    public UtilisateurRepository utilisateurRepository;
     public static void main(String[] args) {
         SpringApplication.run(ClubGestionApplication.class, args);
+
     }
+
+    @Override
+    public void run(String... args) throws Exception {
+        Utilisateur admin = new Utilisateur();
+        admin.setNom("Admin");
+        admin.setPrenom("Admin");
+        admin.setEmail("admin@ecole.ma"); // <-- L'email en question
+        admin.setMotDePasse("admin123");
+        admin.setRole("ADMIN");
+        utilisateurRepository.save(admin);
+    }
+
 
 //    @Bean
 //    CommandLineRunner start(ClubRepository clubRepository) {
@@ -23,4 +41,5 @@ public class ClubGestionApplication {
 //                    System.out.println("Club : " + c.getNom()));
 //        };
 //    }
+
 }

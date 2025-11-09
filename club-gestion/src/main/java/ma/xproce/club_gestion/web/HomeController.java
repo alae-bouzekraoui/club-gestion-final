@@ -41,14 +41,49 @@ public class HomeController {
         return "signup";
     }
 
-    @PostMapping("/signup")
-    public String registerUser(@ModelAttribute Utilisateur user, HttpSession session) {
-        // Enregistrer l’utilisateur dans la base
-        utilisateurService.registerNewUser(user);
+    @PostMapping("/signin")
+    public String loginUser(@ModelAttribute Utilisateur user, HttpSession session, Model model) {
 
-        // Le connecter directement après inscription
-        session.setAttribute("user", user);
-        return "redirect:/";
+        try {
+            // Enregistrer l’utilisateur dans la base
+            Utilisateur existingUser = utilisateurService.loginUser(user.getEmail(),user.getMotDePasse());
+
+            session.setAttribute("user", existingUser);
+
+            // Le connecter directement après inscription
+            session.setAttribute("user", existingUser);
+            return "redirect:/";
+
+        } catch (RuntimeException e) {
+            // 4. Si ça casse (email déjà pris) :
+            // Ajouter le message d'erreur au modèle
+            model.addAttribute("error", e.getMessage());
+
+            // Renvoyer l'utilisateur à la page d'inscription (SANS redirection)
+            // L'utilisateur gardera les données qu'il a déjà saisies
+            return "signin";
+        }
+    }
+
+    @PostMapping("/signup")
+    public String registerUser(@ModelAttribute Utilisateur user, HttpSession session, Model model) { // <-- 2. AJOUTER Model model
+        try {
+            // Enregistrer l’utilisateur dans la base
+            utilisateurService.registerNewUser(user);
+
+            // Le connecter directement après inscription
+            session.setAttribute("user", user);
+            return "redirect:/";
+
+        } catch (RuntimeException e) {
+            // 4. Si ça casse (email déjà pris) :
+            // Ajouter le message d'erreur au modèle
+            model.addAttribute("error", e.getMessage());
+
+            // Renvoyer l'utilisateur à la page d'inscription (SANS redirection)
+            // L'utilisateur gardera les données qu'il a déjà saisies
+            return "signup";
+        }
     }
 
     @GetMapping("/logout")

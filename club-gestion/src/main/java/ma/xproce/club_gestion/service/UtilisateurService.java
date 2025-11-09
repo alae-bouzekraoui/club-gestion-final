@@ -8,16 +8,26 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UtilisateurService {
+
     private final UtilisateurRepository utilisateurRepository;
 
+    // Méthode d'inscription
     public Utilisateur registerNewUser(Utilisateur user) {
-        // Vérifier si l’email existe déjà
-        if (utilisateurRepository.findByEmail(user.getEmail()) != null) {
+        Utilisateur existing = utilisateurRepository.findByEmail(user.getEmail());
+        if (existing != null) {
             throw new RuntimeException("Email déjà utilisé !");
         }
 
         user.setRole("USER");
-
         return utilisateurRepository.save(user);
+    }
+
+    // Méthode de connexion
+    public Utilisateur loginUser(String email, String password) {
+        Utilisateur user = utilisateurRepository.findByEmail(email);
+        if (user == null || !user.getMotDePasse().equals(password)) {
+            throw new RuntimeException("Email ou mot de passe incorrect !");
+        }
+        return user;
     }
 }
