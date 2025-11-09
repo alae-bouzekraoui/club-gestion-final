@@ -15,10 +15,16 @@ import java.util.List;
 public class MembreBureau extends Utilisateur{
     private String poste;
 
-    @ManyToMany(mappedBy = "membreBureau",fetch = FetchType.EAGER)
-    private List<Club> Club;
+    //relation club-membreBureau
+    @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.EAGER)
+    private List<Club> clubList;
 
-    @OneToMany(mappedBy = "club", fetch = FetchType.EAGER)
+    //relation membreBureau-realisation
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER)
     private List<Realisation> realisationList;
+
+    //relation membreBureau-evenement
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER)
+    private List<Evenement> evenementOrganises;
 
 }

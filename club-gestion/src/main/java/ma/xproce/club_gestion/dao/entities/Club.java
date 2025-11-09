@@ -2,8 +2,7 @@ package ma.xproce.club_gestion.dao.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,14 +15,23 @@ public class Club {
     private Long id;
     private String nom;
     private String description;
-    private Date dateCreation;
+    private String objectifs;
+    private String dateCreation;
 
-    @ManyToMany(mappedBy = "clubs",fetch = FetchType.EAGER)
-    private List<Evenement> evenementList;
+    //relation adherent-club
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<Adherent> adherents = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "club",fetch = FetchType.EAGER)
-    private List<MembreBureau> membreBureauList;
+    //relation club-membreBureau
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<MembreBureau> membreBureauList = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "clubList", fetch = FetchType.EAGER)
-    private List<Adherent> adherentList;
+    //relation club-evenement
+    @OneToMany(mappedBy = "club",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Evenement> evenementList = new ArrayList<>();
+
+    //relation club-realisation
+    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Realisation> realisationList = new ArrayList<>();
+
 }

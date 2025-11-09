@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,10 +18,11 @@ import java.util.List;
 
 public class Adherent extends Utilisateur{
 
-    @ManyToMany(mappedBy = "adherentList", fetch = FetchType.EAGER)
-    private List<Club> clubList;
+    //relation adherent-evenement
+    @ManyToMany(mappedBy = "participants", fetch = FetchType.EAGER)
+    private List<Evenement> evenements = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "adherentList", fetch = FetchType.EAGER)
-    private List<Evenement> evenementList;
-
+    //relation adherent-club
+    @ManyToMany(mappedBy = "adherents", fetch = FetchType.EAGER)
+    private List<Club> clubs = new ArrayList<>();
 }

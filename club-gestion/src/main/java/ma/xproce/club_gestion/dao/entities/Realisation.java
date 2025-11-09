@@ -20,6 +20,14 @@ public class Realisation {
     private String description;
     private Date date;
 
+    //relation club-realisation
     @ManyToOne
+    @JoinColumn(name = "club_id")
     private Club club;
+
+    //relation membreBureau-realisation
+    @ManyToOne
+    @JoinColumn(name = "membre_bureau_id")
+    private MembreBureau membreBureau;
+
 }

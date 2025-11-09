@@ -14,13 +14,13 @@ public class ClubGestionApplication {
         SpringApplication.run(ClubGestionApplication.class, args);
     }
 
-    @Bean
-    CommandLineRunner start(ClubRepository clubRepository) {
-        return args -> {
-            clubRepository.save(new Club(null, "Club Mechatronics", "Concevoir, construire et innover en intégrant mécanique, électronique et informatique pour créer des systèmes intelligents et automatisés."));
-            clubRepository.save(new Club(null, "Club ROTARACT", "Servir la communauté en développant le leadership et l'amitié par des actions caritatives."));
-            clubRepository.findAll().forEach(c ->
-                    System.out.println("Club : " + c.getNom()));
-        };
-    }
+//    @Bean
+//    CommandLineRunner start(ClubRepository clubRepository) {
+//        return args -> {
+//            clubRepository.save(new Club(null, "Club Mechatronics", "Concevoir, construire et innover en intégrant mécanique, électronique et informatique pour créer des systèmes intelligents et automatisés."));
+//            clubRepository.save(new Club(null, "Club ROTARACT", "Servir la communauté en développant le leadership et l'amitié par des actions caritatives."));
+//            clubRepository.findAll().forEach(c ->
+//                    System.out.println("Club : " + c.getNom()));
+//        };
+//    }
 }
