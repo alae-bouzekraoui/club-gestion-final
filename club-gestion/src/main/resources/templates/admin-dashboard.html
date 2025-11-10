@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - ENSAM Casablanca</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+        }
+        .event-card {
+            border-left: 5px solid #0d6efd;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .hover-underline {
+            position: relative;
+            color: #f8f9fa !important;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .hover-underline::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            left: 0;
+            bottom: -4px;
+            background-color: #8bbaff;
+            transition: width 0.3s;
+        }
+        .hover-underline:hover::after {
+            width: 100%;
+        }
+        .hover-underline:hover {
+            color: #8bbaff !important;
+        }
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        .transition-all:hover {
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
+     style="background: linear-gradient(90deg, #001233, #2474d1); font-size: 1.15rem; width: 100%;">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="/" style="font-size: 1.4rem;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png"
+                 alt="logo" width="45" height="45" class="me-2">
+            ENSAM Casablanca
+        </a>
+
+        <!-- Liens centrés -->
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav mx-auto d-flex justify-content-center align-items-center gap-5">
+                <th:block th:if="${user != null}">
+                    <li class="nav-item">
+                        <a class="nav-link hover-underline fw-semibold" href="/admin/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link hover-underline fw-semibold" href="/admin/demandes">Demandes</a>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+
+        <!-- Partie droite (connexion / utilisateur) -->
+        <div class="d-flex align-items-center gap-3">
+            <th:block th:if="${user != null}">
+                <span class="text-light fw-semibold fs-5">
+                    👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong>
+                </span>
+                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm transition-all">
+                    Déconnexion
+                </a>
+            </th:block>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">📋 Tableau de bord Admin</h2>
+
+    <div class="card p-4 shadow-sm">
+        <h5>Ajouter un nouveau club</h5>
+        <form th:action="@{/admin/add-club}" method="post" class="mb-3">
+            <div class="mb-2">
+                <input name="nom" class="form-control" placeholder="Nom du club" required>
+            </div>
+            <div class="mb-2">
+                <input name="description" class="form-control" placeholder="Description" required>
+            </div>
+            <div class="mb-2">
+                <input name="objectifs" class="form-control" placeholder="Objectifs" required>
+            </div>
+            <div class="mb-2">
+                <input name="dateCreation" class="form-control" placeholder="dateCreation" required>
+            </div>
+            <button class="btn btn-primary">Ajouter</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <h5 class="mt-4">Clubs existants :</h5>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Objectifs</th>
+            <th>Date de Creation</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="club : ${clubs}">
+            <td th:text="${club.nom}">Nom</td>
+            <td class="text-muted" th:text="${club.description}">Description</td>
+            <td class="text-muted" th:text="${club.objectifs}">Objectifs</td>
+            <td class="text-muted" th:text="${club.dateCreation}">Date de création</td>
+            <td>
+                <!-- Bouton Supprimer -->
+                <form th:action="@{'/admin/clubs/' + ${club.id} + '/delete'}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('Voulez-vous vraiment supprimer ce club ?');">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+                </form>
+
+
+
+                <!-- Bouton Modifier -->
+                <a th:href="@{'/admin/clubs/' + ${club.id} + '/edit'}"
+                   class="btn btn-outline-success btn-sm me-2"
+                   title="Modifier">
+                    <i class="fa-solid fa-pen"></i>
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

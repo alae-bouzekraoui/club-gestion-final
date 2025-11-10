@@ -20,6 +20,11 @@ public class Club {
 
     //relation adherent-club
     @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "adherent_club",
+            joinColumns = @JoinColumn(name = "club_id"),
+            inverseJoinColumns = @JoinColumn(name = "adherent_id")
+    )
     private List<Adherent> adherents = new ArrayList<>();
 
     //relation club-membreBureau

@@ -17,7 +17,6 @@ public class UtilisateurService {
         if (existing != null) {
             throw new RuntimeException("Email déjà utilisé !");
         }
-
         user.setRole("USER");
         return utilisateurRepository.save(user);
     }

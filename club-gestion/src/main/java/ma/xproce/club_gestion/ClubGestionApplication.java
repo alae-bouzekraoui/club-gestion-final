@@ -22,24 +22,21 @@ public class ClubGestionApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Utilisateur admin = new Utilisateur();
-        admin.setNom("Admin");
-        admin.setPrenom("Admin");
-        admin.setEmail("admin@ecole.ma"); // <-- L'email en question
-        admin.setMotDePasse("admin123");
-        admin.setRole("ADMIN");
-        utilisateurRepository.save(admin);
+        if (utilisateurRepository.findByEmail("admin@ecole.ma") == null) {
+            utilisateurRepository.save(new Utilisateur(null,"Admin", "Admin","admin@ensam.ma", "1234", "ADMIN"));
+        }
     }
 
-
-//    @Bean
-//    CommandLineRunner start(ClubRepository clubRepository) {
-//        return args -> {
-//            clubRepository.save(new Club(null, "Club Mechatronics", "Concevoir, construire et innover en intégrant mécanique, électronique et informatique pour créer des systèmes intelligents et automatisés."));
-//            clubRepository.save(new Club(null, "Club ROTARACT", "Servir la communauté en développant le leadership et l'amitié par des actions caritatives."));
-//            clubRepository.findAll().forEach(c ->
-//                    System.out.println("Club : " + c.getNom()));
-//        };
-//    }
+    @Bean
+    CommandLineRunner start(ClubRepository clubRepository) {
+        return args -> {
+            if (clubRepository.count() == 0) {
+                clubRepository.save(new Club(null, "Club Informatique", "Découverte du développement et de l’IA", "Encourager l’innovation et la collaboration", "2022-09-10", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Sportif", "Promotion du sport à l’école", "Renforcer la cohésion et la santé", "2021-11-01", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Théâtre", "Passionnés de scène et d’expression orale", "Favoriser la créativité et la confiance", "2023-03-05", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Musique", "Groupe de musiciens amateurs", "Développer le talent artistique des étudiants", "2020-12-12", null, null, null, null));
+            }
+        };
+    }
 
 }
