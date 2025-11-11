@@ -1,9 +1,7 @@
 package ma.xproce.club_gestion.dao.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

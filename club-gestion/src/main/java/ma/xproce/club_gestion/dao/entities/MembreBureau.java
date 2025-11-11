@@ -2,9 +2,7 @@ package ma.xproce.club_gestion.dao.entities;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,11 +10,13 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
+@Getter
 public class MembreBureau extends Utilisateur{
     private String poste;
 
-    //relation club-membreBureau
-    @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.EAGER)
+
+    @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.LAZY)
     private List<Club> clubList;
 
     //relation membreBureau-realisation

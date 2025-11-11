@@ -52,6 +52,53 @@
         }
     </style>
 </head>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("membresContainer");
+        const btnAdd = document.getElementById("btnAddMembre");
+
+        // Ajouter un nouveau membre
+        btnAdd.addEventListener("click", () => {
+            const firstRow = container.querySelector(".membre-row");
+            const newRow = firstRow.cloneNode(true);
+
+            // Réinitialiser les champs
+            newRow.querySelectorAll("input").forEach(input => input.value = "");
+            newRow.querySelector(".email-error").classList.add("d-none");
+
+            container.appendChild(newRow);
+        });
+
+        // Supprimer un membre
+        container.addEventListener("click", (e) => {
+            if (e.target.classList.contains("btn-remove")) {
+                const row = e.target.closest(".membre-row");
+                if (container.children.length > 1) { // Toujours garder au moins un membre
+                    row.remove();
+                }
+            }
+        });
+
+        // Vérification de l'email via AJAX
+        container.addEventListener("input", async (e) => {
+            if (e.target.classList.contains("email-field")) {
+                const email = e.target.value;
+                const errorMsg = e.target.closest(".membre-row").querySelector(".email-error");
+                if (email.length > 5) {
+                    const res = await fetch(`/admin/check-email?email=${encodeURIComponent(email)}`);
+                    const exists = await res.json();
+                    if (!exists) {
+                        errorMsg.classList.remove("d-none");
+                    } else {
+                        errorMsg.classList.add("d-none");
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
@@ -93,10 +140,11 @@
 
 <div class="container mt-5">
     <h2 class="text-center mb-4">📋 Tableau de bord Admin</h2>
-
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
     <div class="card p-4 shadow-sm">
         <h5>Ajouter un nouveau club</h5>
-        <form th:action="@{/admin/add-club}" method="post" class="mb-3">
+        <form th:action="@{/admin/add-club}" method="post" id="clubForm">
             <div class="mb-2">
                 <input name="nom" class="form-control" placeholder="Nom du club" required>
             </div>
@@ -107,9 +155,22 @@
                 <input name="objectifs" class="form-control" placeholder="Objectifs" required>
             </div>
             <div class="mb-2">
-                <input name="dateCreation" class="form-control" placeholder="dateCreation" required>
+                <input name="dateCreation" class="form-control" placeholder="Date de création" required>
             </div>
-            <button class="btn btn-primary">Ajouter</button>
+
+            <h6>Membres du bureau</h6>
+            <div id="membresContainer">
+                <div class="membre-row mb-2 d-flex gap-2">
+                    <input name="emails" type="email" class="form-control email-field" placeholder="Email du membre" required>
+                    <input name="postes" type="text" class="form-control" placeholder="Poste" required>
+                    <button type="button" class="btn btn-danger btn-sm btn-remove">❌</button>
+                    <div class="text-danger email-error d-none">Email inexistant !</div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary mb-2" id="btnAddMembre">➕ Ajouter un membre</button>
+            <br>
+            <button class="btn btn-success">Ajouter le club</button>
         </form>
     </div>
 

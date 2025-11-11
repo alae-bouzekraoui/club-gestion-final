@@ -1,9 +1,7 @@
 package ma.xproce.club_gestion.dao.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -11,7 +9,8 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
+@Setter
+@Getter
 public class Realisation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
