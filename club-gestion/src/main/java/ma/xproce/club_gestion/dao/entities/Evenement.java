@@ -21,16 +21,13 @@ public class Evenement {
     private String lieu;
     private String etat;
 
-    //relation adherent-evenement
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<Adherent> participants = new ArrayList<>();
 
-    //relation club-evenement
     @ManyToOne
     @JoinColumn(name = "club_id")
     private Club club;
 
-    //relation membreBureau-evenement
     @ManyToOne
     @JoinColumn(name = "membre_bureau_id")
     private MembreBureau membreBureau;

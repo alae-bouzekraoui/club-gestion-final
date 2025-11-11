@@ -27,16 +27,16 @@ public class ClubGestionApplication implements CommandLineRunner {
 //        }
     }
 
-//    @Bean
-//    CommandLineRunner start(ClubRepository clubRepository) {
-//        return args -> {
-//            if (clubRepository.count() == 0) {
-//                clubRepository.save(new Club(null, "Club Informatique", "Découverte du développement et de l’IA", "Encourager l’innovation et la collaboration", "2022-09-10", null, null, null, null));
-//                clubRepository.save(new Club(null, "Club Sportif", "Promotion du sport à l’école", "Renforcer la cohésion et la santé", "2021-11-01", null, null, null, null));
-//                clubRepository.save(new Club(null, "Club Théâtre", "Passionnés de scène et d’expression orale", "Favoriser la créativité et la confiance", "2023-03-05", null, null, null, null));
-//                clubRepository.save(new Club(null, "Club Musique", "Groupe de musiciens amateurs", "Développer le talent artistique des étudiants", "2020-12-12", null, null, null, null));
-//            }
-//        };
-//    }
+    @Bean
+    CommandLineRunner start(ClubRepository clubRepository) {
+        return args -> {
+            if (clubRepository.count() == 0) {
+                clubRepository.save(new Club(null, "Club Informatique", "Découverte du développement et de l’IA", "Encourager l’innovation et la collaboration", "2022-09-10", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Sportif", "Promotion du sport à l’école", "Renforcer la cohésion et la santé", "2021-11-01", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Théâtre", "Passionnés de scène et d’expression orale", "Favoriser la créativité et la confiance", "2023-03-05", null, null, null, null));
+                clubRepository.save(new Club(null, "Club Musique", "Groupe de musiciens amateurs", "Développer le talent artistique des étudiants", "2020-12-12", null, null, null, null));
+            }
+        };
+    }
 
 }

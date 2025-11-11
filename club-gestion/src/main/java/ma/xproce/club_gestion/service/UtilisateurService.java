@@ -21,7 +21,6 @@ public class UtilisateurService {
         return utilisateurRepository.save(user);
     }
 
-    // Méthode de connexion
     public Utilisateur loginUser(String email, String password) {
         Utilisateur user = utilisateurRepository.findByEmail(email);
         if (user == null || !user.getMotDePasse().equals(password)) {

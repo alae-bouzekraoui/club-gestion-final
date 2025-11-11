@@ -1,10 +1,7 @@
 package ma.xproce.club_gestion.dao.entities;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -14,11 +11,11 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@PrimaryKeyJoinColumn(name = "id") // ✅ héritage propre de la clé primaire
+@PrimaryKeyJoinColumn(name = "id")
 public class Adherent extends Utilisateur{
 
     //relation adherent-evenement
-    @ManyToMany(mappedBy = "participants", fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "participants", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<Evenement> evenements = new ArrayList<>();
 
     //relation adherent-club

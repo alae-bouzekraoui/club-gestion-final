@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpSession;
 import ma.xproce.club_gestion.dao.entities.Adherent;
 import ma.xproce.club_gestion.dao.entities.Club;
+import ma.xproce.club_gestion.dao.entities.MembreBureau;
 import ma.xproce.club_gestion.dao.entities.Utilisateur;
 import ma.xproce.club_gestion.dao.repositories.AdherentRepository;
 import ma.xproce.club_gestion.dao.repositories.ClubRepository;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -220,5 +222,46 @@ public class HomeController {
         model.addAttribute("club", club);
         return "club-details";
     }
+
+    @GetMapping("/evenements")
+    public String showEvenements(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter pour accéder aux événements.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            return "redirect:/signin";
+        }
+
+        model.addAttribute("role", user.getRole());
+
+        switch (user.getRole()) {
+            case "USER":
+
+                break;
+
+            case "ADHERENT":
+                Adherent adherent = (Adherent) user;
+                List<Club> clubsAdheres = adherent.getClubs();
+                if (clubsAdheres == null) {
+                    clubsAdheres = new ArrayList<>();
+                }
+                model.addAttribute("clubsAdheres", clubsAdheres);
+
+
+            case "MembreBureau":
+                // Récupérer les clubs dont le membre du bureau fait partie
+                MembreBureau membre = (MembreBureau) user;
+                List<Club> clubsMembreBureau = membre.getClubList();
+                model.addAttribute("clubsMembreBureau", clubsMembreBureau);
+                break;
+
+            default:
+
+                break;
+        }
+        model.addAttribute("user", user);
+        return "evenements";
+    }
+
 
 }

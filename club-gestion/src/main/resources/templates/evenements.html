@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Événements</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -51,7 +60,6 @@
     </style>
 </head>
 <body>
-
 <!-- Barre de navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
      style="background: linear-gradient(90deg, #001233, #2474d1); font-size: 1.15rem; width: 100%;">
@@ -106,40 +114,101 @@
 </nav>
 
 
+
 <!-- Contenu principal -->
 <main class="container mt-5">
-    <!-- ✅ Bloc message flash -->
+    <!--  Bloc message flash -->
     <div th:if="${message}" class="container mt-3">
         <div th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show text-center'" role="alert">
             <strong th:text="${message}"></strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
-    <h2 class="mb-4 text-center">Mes Clubs</h2>
-    <!-- Liste des clubs -->
-    <div class="row">
-        <div class="col-md-4 mb-4" th:each="club : ${clubs}">
-            <div class="card club-card shadow-sm">
-                <img src="https://picsum.photos/400/300?random" class="card-img-top" alt="Club image">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${club.nom}">Nom du club</h5>
-                    <p class="card-text text-muted" th:text="${club.description}">Description du club</p>
-                    <a th:href="@{'/clubs/' + ${club.nom}}" class="btn btn-primary">Voir plus</a>
-                    <form th:action="@{'/clubs/' + ${club.id} + '/desadhesion'}" method="post">
-                        <button type="submit" class="btn btn-danger">
-                            Annuler mon adhésion
-                        </button>
-                    </form>
+
+    <!-- ✅ Contenu principal -->
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Si role = USER -->
+        <div th:if="${role == 'USER'}" class="text-center mt-10">
+            <h2 class="text-2xl font-semibold text-gray-700">Aucun club associé</h2>
+            <p class="text-gray-500 mt-2">Vous n’êtes membre d’aucun club. Aucune liste d’événements à afficher.</p>
+        </div>
+
+        <!-- Si role = ADHERENT -->
+        <div th:if="${role == 'ADHERENT'}">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Événements de vos clubs</h2>
+
+            <div th:each="club : ${clubsAdheres}" class="mb-6 bg-white p-4 rounded-xl shadow">
+                <h3 class="text-xl font-semibold text-blue-600 mb-3" th:text="${club.nom}"></h3>
+
+                <div th:if="${#lists.isEmpty(club.evenements)}">
+                    <p class="text-gray-500">Aucun événement pour ce club.</p>
                 </div>
+
+                <div th:each="event : ${club.evenements}" class="border-t border-gray-200 pt-3 mt-2">
+                    <h4 class="text-lg font-semibold" th:text="${event.titre}"></h4>
+                    <p class="text-gray-600" th:text="${event.description}"></p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        📅 <span th:text="${#dates.format(event.date, 'dd/MM/yyyy')}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Si role = MEMBRE_BUREAU -->
+        <div th:if="${role == 'MembreBureau'}">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Gestion des événements</h2>
+
+            <!-- 🔹 Liste des clubs du membre du bureau -->
+            <div th:each="club : ${clubsMembreBureau}" class="mb-8 bg-white p-4 rounded-xl shadow">
+                <h3 class="text-xl font-semibold text-blue-600 mb-3" th:text="${club.nom}"></h3>
+
+                <div th:if="${#lists.isEmpty(club.evenements)}">
+                    <p class="text-gray-500">Aucun événement encore créé.</p>
+                </div>
+
+                <div th:each="event : ${club.evenements}" class="border-t border-gray-200 pt-3 mt-2">
+                    <h4 class="text-lg font-semibold" th:text="${event.titre}"></h4>
+                    <p class="text-gray-600" th:text="${event.description}"></p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        📅 <span th:text="${#dates.format(event.date, 'dd/MM/yyyy')}"></span>
+                    </p>
+                </div>
+
+                <!-- 🔹 Formulaire d’ajout d’événement -->
+                <form th:action="@{/evenements/add}" method="post" class="mt-4 border-t pt-4">
+                    <input type="hidden" name="clubId" th:value="${club.id}">
+
+                    <div class="mb-2">
+                        <label class="block text-gray-700 font-semibold">Titre</label>
+                        <input type="text" name="titre" required class="w-full border rounded p-2">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="block text-gray-700 font-semibold">Description</label>
+                        <textarea name="description" required class="w-full border rounded p-2"></textarea>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="block text-gray-700 font-semibold">Date</label>
+                        <input type="date" name="date" required class="w-full border rounded p-2">
+                    </div>
+
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        ➕ Ajouter un événement
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </main>
+
 
 <!-- Pied de page -->
 <footer class="bg-dark text-white text-center py-3 mt-auto">
     <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

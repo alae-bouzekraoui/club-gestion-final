@@ -12,19 +12,20 @@ import java.util.List;
 @AllArgsConstructor
 @Setter
 @Getter
+@PrimaryKeyJoinColumn(name = "id")
 public class MembreBureau extends Utilisateur{
     private String poste;
 
 
-    @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Club> clubList;
 
     //relation membreBureau-realisation
-    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<Realisation> realisationList;
 
     //relation membreBureau-evenement
-    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<Evenement> evenementOrganises;
 
 }

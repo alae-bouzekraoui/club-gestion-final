@@ -19,7 +19,7 @@ public class Club {
     private String dateCreation;
 
     //relation adherent-club
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinTable(
             name = "adherent_club",
             joinColumns = @JoinColumn(name = "club_id"),
@@ -28,14 +28,12 @@ public class Club {
     private List<Adherent> adherents = new ArrayList<>();
 
     //relation club-membreBureau
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<MembreBureau> membreBureauList = new ArrayList<>();
 
-    //relation club-evenement
     @OneToMany(mappedBy = "club",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Evenement> evenementList = new ArrayList<>();
 
-    //relation club-realisation
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Realisation> realisationList = new ArrayList<>();
 

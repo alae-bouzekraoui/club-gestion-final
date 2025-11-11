@@ -66,6 +66,7 @@
         <!-- Liens centrés -->
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
             <ul class="navbar-nav mx-auto d-flex justify-content-center align-items-center gap-5">
+
                 <th:block th:if="${user != null}">
                     <li class="nav-item">
                         <a class="nav-link hover-underline fw-semibold" href="/mes-clubs">🏅 Mes Clubs</a>
@@ -73,7 +74,12 @@
                     <li class="nav-item">
                         <a class="nav-link hover-underline fw-semibold" href="/calendrier">📅 Mon Calendrier</a>
                     </li>
+                    <!-- 🔹 Nouveau lien Événements -->
+                    <li class="nav-item">
+                        <a class="nav-link hover-underline fw-semibold" href="/evenements">🎉 Événements</a>
+                    </li>
                 </th:block>
+
             </ul>
         </div>
 
