@@ -21,11 +21,11 @@ public class MembreBureau extends Utilisateur{
     private List<Club> clubList;
 
     //relation membreBureau-realisation
-    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Realisation> realisationList;
 
     //relation membreBureau-evenement
-    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "membreBureau", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Evenement> evenementOrganises;
 
 }

@@ -1,13 +1,4 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Événements</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-
-<!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -22,12 +13,6 @@
         }
         main {
             flex: 1;
-        }
-        .club-card {
-            transition: transform 0.2s ease;
-        }
-        .club-card:hover {
-            transform: scale(1.03);
         }
         .hover-underline {
             position: relative;
@@ -141,63 +126,67 @@
             <div th:each="club : ${clubsAdheres}" class="mb-6 bg-white p-4 rounded-xl shadow">
                 <h3 class="text-xl font-semibold text-blue-600 mb-3" th:text="${club.nom}"></h3>
 
-                <div th:if="${#lists.isEmpty(club.evenements)}">
+                <div th:if="${#lists.isEmpty(club.evenementList)}">
                     <p class="text-gray-500">Aucun événement pour ce club.</p>
                 </div>
 
-                <div th:each="event : ${club.evenements}" class="border-t border-gray-200 pt-3 mt-2">
+                <div th:each="event : ${club.evenementList}" class="border-t border-gray-200 pt-3 mt-2">
                     <h4 class="text-lg font-semibold" th:text="${event.titre}"></h4>
                     <p class="text-gray-600" th:text="${event.description}"></p>
-                    <p class="text-sm text-gray-500 mt-1">
-                        📅 <span th:text="${#dates.format(event.date, 'dd/MM/yyyy')}"></span>
+                    <p class="small text-muted mt-1">
+                        📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Si role = MEMBRE_BUREAU -->
         <div th:if="${role == 'MembreBureau'}">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800">Gestion des événements</h2>
+            <h2 class="h2 fw-bold mb-4 text-dark">Gestion des événements</h2>
 
-            <!-- 🔹 Liste des clubs du membre du bureau -->
-            <div th:each="club : ${clubsMembreBureau}" class="mb-8 bg-white p-4 rounded-xl shadow">
-                <h3 class="text-xl font-semibold text-blue-600 mb-3" th:text="${club.nom}"></h3>
+            <div class="row g-4">
 
-                <div th:if="${#lists.isEmpty(club.evenements)}">
-                    <p class="text-gray-500">Aucun événement encore créé.</p>
+                <div th:each="club : ${clubsMembreBureau}" class="col-md-6">
+
+                    <div class="shadow-sm p-4 bg-white rounded border h-100">
+
+                        <h3 class="h4 fw-semibold text-primary mb-3" th:text="${club.nom}"></h3>
+
+                        <div th:if="${#lists.isEmpty(club.evenementList)}">
+                            <p class="text-muted">Aucun événement encore créé.</p>
+                        </div>
+
+                        <div th:each="event : ${club.evenementList}" class="border-top pt-3 mt-2">
+                            <h4 class="h5 fw-semibold" th:text="${event.titre}"></h4>
+                            <p class="text-secondary" th:text="${event.description}"></p>
+                            <p class="small text-muted mt-1">
+                                📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
+                            </p>
+                        </div>
+
+                        <form th:action="@{/evenements/add}" method="post" class="mt-4 border-top pt-4">
+                            <input type="hidden" name="clubId" th:value="${club.id}">
+
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Titre</label>
+                                <input type="text" name="titre" required class="form-control">
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Description</label>
+                                <textarea name="description" required class="form-control"></textarea>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Date</label>
+                                <input type="date" name="date" required class="form-control">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-2">
+                                ➕ Ajouter un événement
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-                <div th:each="event : ${club.evenements}" class="border-t border-gray-200 pt-3 mt-2">
-                    <h4 class="text-lg font-semibold" th:text="${event.titre}"></h4>
-                    <p class="text-gray-600" th:text="${event.description}"></p>
-                    <p class="text-sm text-gray-500 mt-1">
-                        📅 <span th:text="${#dates.format(event.date, 'dd/MM/yyyy')}"></span>
-                    </p>
-                </div>
-
-                <!-- 🔹 Formulaire d’ajout d’événement -->
-                <form th:action="@{/evenements/add}" method="post" class="mt-4 border-t pt-4">
-                    <input type="hidden" name="clubId" th:value="${club.id}">
-
-                    <div class="mb-2">
-                        <label class="block text-gray-700 font-semibold">Titre</label>
-                        <input type="text" name="titre" required class="w-full border rounded p-2">
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="block text-gray-700 font-semibold">Description</label>
-                        <textarea name="description" required class="w-full border rounded p-2"></textarea>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="block text-gray-700 font-semibold">Date</label>
-                        <input type="date" name="date" required class="w-full border rounded p-2">
-                    </div>
-
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        ➕ Ajouter un événement
-                    </button>
-                </form>
             </div>
         </div>
     </div>

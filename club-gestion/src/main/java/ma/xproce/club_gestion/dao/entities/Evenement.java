@@ -21,7 +21,7 @@ public class Evenement {
     private String lieu;
     private String etat;
 
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Adherent> participants = new ArrayList<>();
 
     @ManyToOne

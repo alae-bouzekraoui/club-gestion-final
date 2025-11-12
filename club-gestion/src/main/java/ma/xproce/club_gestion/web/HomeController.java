@@ -3,21 +3,19 @@ package ma.xproce.club_gestion.web;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpSession;
-import ma.xproce.club_gestion.dao.entities.Adherent;
-import ma.xproce.club_gestion.dao.entities.Club;
-import ma.xproce.club_gestion.dao.entities.MembreBureau;
-import ma.xproce.club_gestion.dao.entities.Utilisateur;
+import ma.xproce.club_gestion.dao.entities.*;
 import ma.xproce.club_gestion.dao.repositories.AdherentRepository;
 import ma.xproce.club_gestion.dao.repositories.ClubRepository;
+import ma.xproce.club_gestion.dao.repositories.MembreBureauRepository;
 import ma.xproce.club_gestion.dao.repositories.UtilisateurRepository;
+import ma.xproce.club_gestion.service.AdherentService;
+import ma.xproce.club_gestion.service.EvenementService;
+import ma.xproce.club_gestion.service.MembreBureauSerive;
 import ma.xproce.club_gestion.service.UtilisateurService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,9 +28,12 @@ import java.util.Map;
 public class HomeController {
 
     private final UtilisateurService utilisateurService;
+    private final MembreBureauSerive membreBureauSerive;
     private final ClubRepository clubRepository;
     private final AdherentRepository adherentRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final AdherentService adherentService;
+    private final EvenementService evenementService;
 
 
     @GetMapping("/")
@@ -226,6 +227,7 @@ public class HomeController {
     @GetMapping("/evenements")
     public String showEvenements(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
+
         if (user == null) {
             redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter pour accéder aux événements.");
             redirectAttributes.addFlashAttribute("messageType", "warning");
@@ -240,18 +242,21 @@ public class HomeController {
                 break;
 
             case "ADHERENT":
-                Adherent adherent = (Adherent) user;
+                Adherent adherent = adherentService.getAdherentFromUser(user) ;
                 List<Club> clubsAdheres = adherent.getClubs();
+
                 if (clubsAdheres == null) {
                     clubsAdheres = new ArrayList<>();
                 }
                 model.addAttribute("clubsAdheres", clubsAdheres);
-
+                break;
 
             case "MembreBureau":
-                // Récupérer les clubs dont le membre du bureau fait partie
-                MembreBureau membre = (MembreBureau) user;
+                MembreBureau membre = membreBureauSerive.getMeembreFromUser(user) ;
                 List<Club> clubsMembreBureau = membre.getClubList();
+                if (clubsMembreBureau == null) {
+                    clubsMembreBureau = new ArrayList<>();
+                }
                 model.addAttribute("clubsMembreBureau", clubsMembreBureau);
                 break;
 
@@ -263,5 +268,34 @@ public class HomeController {
         return "evenements";
     }
 
+    @PostMapping("/evenements/add")
+    public String addEvenement(
+            @ModelAttribute Evenement evenement,
+
+            @RequestParam("clubId") Long clubId,
+
+            RedirectAttributes redirectAttributes
+    ) {
+
+        Club club = clubRepository.findById(clubId)
+                .orElse(null);
+
+        if (club == null) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : Club non trouvé.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/evenements";
+        }
+
+        try {
+            evenementService.ajouterEvenement(club, evenement);
+            redirectAttributes.addFlashAttribute("message", "Événement ajouté avec succès !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Une erreur est survenue lors de l'ajout.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+
+        return "redirect:/evenements";
+    }
 
 }

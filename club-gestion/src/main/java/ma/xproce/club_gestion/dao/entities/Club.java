@@ -28,13 +28,13 @@ public class Club {
     private List<Adherent> adherents = new ArrayList<>();
 
     //relation club-membreBureau
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<MembreBureau> membreBureauList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "club",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "club",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Evenement> evenementList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Realisation> realisationList = new ArrayList<>();
 
 }
