@@ -204,15 +204,34 @@ public class HomeController {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
         if (user == null) return "redirect:/signin";
 
-        // Données factices pour test
-        List<Map<String, String>> evenements = List.of(
-                Map.of("name", "Hackathon ENSAM", "description", "Compétition de codage", "date", "2025-12-05", "lieu", "Amphi A"),
-                Map.of("name", "Journée Sportive", "description", "Tournoi inter-clubs", "date", "2025-12-10", "lieu", "Stade"),
-                Map.of("name", "Conférence IA", "description", "Invité : Dr. El Mekki", "date", "2025-12-15", "lieu", "Salle 12")
-        );
+        model.addAttribute("role", user.getRole());
+
+        switch (user.getRole()){
+            case "AHERENT":
+                Adherent adherent = adherentService.getAdherentFromUser(user);
+                List<Evenement> adherentEvenements = adherentService.getListOfAdherentEvents(adherent);
+
+                if (adherentEvenements == null) {
+                    adherentEvenements = new ArrayList<>();
+                }
+
+                model.addAttribute("adherentEvenements", adherentEvenements);
+                break;
+
+            case "MembreBureau":
+                MembreBureau membreBureau = membreBureauSerive.
+                List<Evenement> adherentEvenements = adherentService.getListOfAdherentEvents(adherent);
+
+                if (adherentEvenements == null) {
+                    adherentEvenements = new ArrayList<>();
+                }
+
+                model.addAttribute("adherentEvenements", adherentEvenements);
+                break;
+
+        }
 
         model.addAttribute("user", user);
-        model.addAttribute("evenements", evenements);
         return "calendrier";
     }
 
@@ -237,10 +256,6 @@ public class HomeController {
         model.addAttribute("role", user.getRole());
 
         switch (user.getRole()) {
-            case "USER":
-
-                break;
-
             case "ADHERENT":
                 Adherent adherent = adherentService.getAdherentFromUser(user) ;
                 List<Club> clubsAdheres = adherent.getClubs();
@@ -296,6 +311,41 @@ public class HomeController {
         }
 
         return "redirect:/evenements";
+    }
+
+    @PostMapping("/evenements/supprimer/{id}")
+    public String supprimerEvenement(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            evenementService.supprimerEvenement(id);
+            redirectAttributes.addFlashAttribute("message", "Événement supprimé avec succès !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur lors de la suppression de l’événement.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+
+        return "redirect:/evenements";
+    }
+
+    @PostMapping("/evenements/Ajout_au_calendrier/{id}")
+    public String ajoutEvenemetCalendrier(
+            @PathVariable Long id,
+            RedirectAttributes redirectAttributes,
+            HttpSession session
+    ){
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter pour accéder aux événements.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            return "redirect:/signin";
+        }
+        Adherent adherent = adherentService.getAdherentFromUser(user);
+
+        evenementService.ajoutEvenementCalendrier(id,adherent);
+
+        return "calendrier";
+
     }
 
 }

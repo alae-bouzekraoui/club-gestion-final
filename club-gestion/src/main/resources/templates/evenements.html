@@ -42,8 +42,30 @@
         .transition-all:hover {
             transform: scale(1.08);
         }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+        }
+
+        .modal-container {
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
+
 <body>
 <!-- Barre de navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
@@ -130,63 +152,102 @@
                     <p class="text-gray-500">Aucun événement pour ce club.</p>
                 </div>
 
-                <div th:each="event : ${club.evenementList}" class="border-t border-gray-200 pt-3 mt-2">
-                    <h4 class="text-lg font-semibold" th:text="${event.titre}"></h4>
-                    <p class="text-gray-600" th:text="${event.description}"></p>
-                    <p class="small text-muted mt-1">
-                        📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
-                    </p>
+                <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(club.evenementList)}">
+                    <div class="col" th:each="event : ${club.evenementList}">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary fw-semibold" th:text="${event.titre}"></h5>
+                                <p class="card-text text-secondary" th:text="${event.description}"></p>
+                                <p class="small text-muted mb-1">
+                                    📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
+                                </p>
+                            </div>
+
+                            <div class="card-footer bg-transparent border-0 text-end">
+                                <form th:action="@{/evenements/Ajout_au_calendrier/{id}(id=${event.id})}" method="post">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        Ajout_au_calendrier
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div th:if="${role == 'MembreBureau'}">
-            <h2 class="h2 fw-bold mb-4 text-dark">Gestion des événements</h2>
 
-            <div class="row g-4">
+        <!-- Si role = MembreBureau -->
+        <div class="container my-5" th:if="${role == 'MembreBureau'}">
 
-                <div th:each="club : ${clubsMembreBureau}" class="col-md-6">
+            <h2 class="text-center text-primary mb-5">Clubs et leurs Événements</h2>
 
-                    <div class="shadow-sm p-4 bg-white rounded border h-100">
+            <div th:each="club : ${clubsMembreBureau}" class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h4 fw-semibold text-primary mb-0" th:text="${club.nom}"></h3>
+                    <button class="btn btn-success btn-sm"
+                            th:attr="data-club-id=${club.id}"
+                            onclick="openModal(this)">
+                        ➕ Ajouter un événement
+                    </button>
+                </div>
 
-                        <h3 class="h4 fw-semibold text-primary mb-3" th:text="${club.nom}"></h3>
+                <div th:if="${#lists.isEmpty(club.evenementList)}">
+                    <p class="text-muted fst-italic">Aucun événement encore créé.</p>
+                </div>
 
-                        <div th:if="${#lists.isEmpty(club.evenementList)}">
-                            <p class="text-muted">Aucun événement encore créé.</p>
+                <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(club.evenementList)}">
+                    <div class="col" th:each="event : ${club.evenementList}">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary fw-semibold" th:text="${event.titre}"></h5>
+                                <p class="card-text text-secondary" th:text="${event.description}"></p>
+                                <p class="small text-muted mb-1">
+                                    📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 text-end">
+                                <form th:action="@{/evenements/supprimer/{id}(id=${event.id})}" method="post">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        🗑️ Supprimer
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-
-                        <div th:each="event : ${club.evenementList}" class="border-top pt-3 mt-2">
-                            <h4 class="h5 fw-semibold" th:text="${event.titre}"></h4>
-                            <p class="text-secondary" th:text="${event.description}"></p>
-                            <p class="small text-muted mt-1">
-                                📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
-                            </p>
-                        </div>
-
-                        <form th:action="@{/evenements/add}" method="post" class="mt-4 border-top pt-4">
-                            <input type="hidden" name="clubId" th:value="${club.id}">
-
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold">Titre</label>
-                                <input type="text" name="titre" required class="form-control">
-                            </div>
-
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold">Description</label>
-                                <textarea name="description" required class="form-control"></textarea>
-                            </div>
-
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold">Date</label>
-                                <input type="date" name="date" required class="form-control">
-                            </div>
-
-                            <button type="submit" class="btn btn-primary mt-2">
-                                ➕ Ajouter un événement
-                            </button>
-                        </form>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ======= MODALE D’AJOUT ======= -->
+        <div id="addEventModal" class="modal-overlay d-none">
+            <div class="modal-container bg-white p-4 rounded-4 shadow-lg">
+                <h4 class="mb-3 text-primary fw-semibold text-center">Ajouter un événement</h4>
+
+                <form th:action="@{/evenements/add}" method="post" id="eventForm">
+                    <input type="hidden" name="clubId" id="clubId">
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Titre</label>
+                        <input type="text" name="titre" required class="form-control">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Description</label>
+                        <textarea name="description" required class="form-control"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input type="date" name="date" required class="form-control">
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+                        <button type="submit" class="btn btn-primary">➕ Ajouter</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -199,5 +260,19 @@
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<script>
+    const modal = document.getElementById("addEventModal");
+    const clubIdInput = document.getElementById("clubId");
+
+    function openModal(button) {
+        const clubId = button.getAttribute("data-club-id");
+        clubIdInput.value = clubId;
+        modal.classList.remove("d-none");
+    }
+
+    function closeModal() {
+        modal.classList.add("d-none");
+    }
+</script>
 </body>
 </html>
