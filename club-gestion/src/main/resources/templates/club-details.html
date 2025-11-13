@@ -19,7 +19,7 @@
     <p>Bienvenue sur la page du <strong th:text="${clubName}"></strong> !</p>
 
     <p>
-        Ici, tu pourras plus tard afficher :
+        afficher :
     <ul>
         <li>Les événements du club</li>
         <li>Les membres du bureau</li>
@@ -27,15 +27,17 @@
     </ul>
     </p>
     <div class="text-center mt-4">
-        <form th:action="@{'/clubs/' + ${club.id} + '/adhesion'}" method="post">
-            <button type="submit" class="btn btn-success btn-lg px-4">
-                🤝 S’adhérer à ce club
-            </button>
-        </form>
+        <th:block th:if="${!isAlreadyMember}">
+            <form th:action="@{'/clubs/' + ${club.id} + '/adhesion'}" method="post">
+                <button type="submit" class="btn btn-success btn-lg px-4">
+                    S'adhérer à ce club
+                </button>
+            </form>
+        </th:block>
     </div>
 
 
-    <a href="/" class="btn btn-secondary">⬅ Retour à la liste</a>
+    <a href="/" class="btn btn-secondary">Retour à la liste</a>
 </div>
 
 <footer class="bg-dark text-white text-center py-3 mt-5">

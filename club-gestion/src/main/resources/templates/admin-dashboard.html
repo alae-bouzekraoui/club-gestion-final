@@ -79,7 +79,6 @@
             }
         });
 
-        // Vérification de l'email via AJAX
         container.addEventListener("input", async (e) => {
             if (e.target.classList.contains("email-field")) {
                 const email = e.target.value;
@@ -110,7 +109,6 @@
             ENSAM Casablanca
         </a>
 
-        <!-- Liens centrés -->
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
             <ul class="navbar-nav mx-auto d-flex justify-content-center align-items-center gap-5">
                 <th:block th:if="${user != null}">
@@ -124,13 +122,12 @@
             </ul>
         </div>
 
-        <!-- Partie droite (connexion / utilisateur) -->
         <div class="d-flex align-items-center gap-3">
             <th:block th:if="${user != null}">
                 <span class="text-light fw-semibold fs-5">
                     👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong>
                 </span>
-                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm transition-all">
+                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm">
                     Déconnexion
                 </a>
             </th:block>
@@ -142,37 +139,6 @@
     <h2 class="text-center mb-4">📋 Tableau de bord Admin</h2>
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div class="card p-4 shadow-sm">
-        <h5>Ajouter un nouveau club</h5>
-        <form th:action="@{/admin/add-club}" method="post" id="clubForm">
-            <div class="mb-2">
-                <input name="nom" class="form-control" placeholder="Nom du club" required>
-            </div>
-            <div class="mb-2">
-                <input name="description" class="form-control" placeholder="Description" required>
-            </div>
-            <div class="mb-2">
-                <input name="objectifs" class="form-control" placeholder="Objectifs" required>
-            </div>
-            <div class="mb-2">
-                <input name="dateCreation" class="form-control" placeholder="Date de création" required>
-            </div>
-
-            <h6>Membres du bureau</h6>
-            <div id="membresContainer">
-                <div class="membre-row mb-2 d-flex gap-2">
-                    <input name="emails" type="email" class="form-control email-field" placeholder="Email du membre" required>
-                    <input name="postes" type="text" class="form-control" placeholder="Poste" required>
-                    <button type="button" class="btn btn-danger btn-sm btn-remove">❌</button>
-                    <div class="text-danger email-error d-none">Email inexistant !</div>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-primary mb-2" id="btnAddMembre">➕ Ajouter un membre</button>
-            <br>
-            <button class="btn btn-success">Ajouter le club</button>
-        </form>
-    </div>
 
     <hr>
 
@@ -201,15 +167,12 @@
                     <i class="fa-solid fa-trash"></i>
                 </button>
                 </form>
-
-
-
                 <!-- Bouton Modifier -->
-                <a th:href="@{'/admin/clubs/' + ${club.id} + '/edit'}"
-                   class="btn btn-outline-success btn-sm me-2"
-                   title="Modifier">
-                    <i class="fa-solid fa-pen"></i>
-                </a>
+<!--                <a th:href="@{'/admin/clubs/' + ${club.id} + '/edit'}"-->
+<!--                   class="btn btn-outline-success btn-sm me-2"-->
+<!--                   title="Modifier">-->
+<!--                    <i class="fa-solid fa-pen"></i>-->
+<!--                </a>-->
             </td>
         </tr>
         </tbody>

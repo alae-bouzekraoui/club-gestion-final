@@ -25,7 +25,7 @@ public class MembreBureau extends Utilisateur{
     private List<Realisation> realisationList;
 
     //relation membreBureau-evenement
-    @ManyToMany(mappedBy = "membreBureauList", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Evenement> evenementOrganises;
 
 }

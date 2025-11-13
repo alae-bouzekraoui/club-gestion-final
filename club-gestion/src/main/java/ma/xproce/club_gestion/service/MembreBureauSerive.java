@@ -17,7 +17,7 @@ public class MembreBureauSerive {
 
     private final MembreBureauRepository membreBureauRepository;
 
-    public MembreBureau getMeembreFromUser (Utilisateur user){
+    public MembreBureau getMembreFromUser (Utilisateur user){
         return membreBureauRepository.getById(user.getId());
     }
 

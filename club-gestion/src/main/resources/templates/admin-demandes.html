@@ -2,54 +2,9 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - ENSAM Casablanca</title>
+    <title>Demandes de clubs - ENSAM Casablanca</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        main {
-            flex: 1;
-        }
-        .event-card {
-            border-left: 5px solid #0d6efd;
-            background: white;
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .hover-underline {
-            position: relative;
-            color: #f8f9fa !important;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        .hover-underline::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 3px;
-            left: 0;
-            bottom: -4px;
-            background-color: #8bbaff;
-            transition: width 0.3s;
-        }
-        .hover-underline:hover::after {
-            width: 100%;
-        }
-        .hover-underline:hover {
-            color: #8bbaff!important;
-        }
-        .transition-all {
-            transition: all 0.3s ease-in-out;
-        }
-        .transition-all:hover {
-            transform: scale(1.08);
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="bg-light">
 
@@ -91,8 +46,94 @@
 </nav>
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Page demande de creation de clubs</h2>
+    <h2 class="text-center mb-4">📋 Demandes de création de clubs</h2>
+
+    <!-- Messages flash -->
+    <div th:if="${message}"
+         th:class="${'alert alert-' + messageType + ' alert-dismissible fade show'}"
+         role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-primary">
+                <tr>
+                    <th>Nom du club</th>
+                    <th>Description</th>
+                    <th>Objectifs</th>
+                    <th>Demandeur</th>
+                    <th>Date demande</th>
+                    <th style="width: 200px;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="demande : ${demandes}">
+                    <td><strong th:text="${demande.nom}"></strong></td>
+                    <td th:text="${demande.description}"></td>
+                    <td th:text="${demande.objectifs}"></td>
+                    <td th:text="${demande.demandeur.prenom + ' ' + demande.demandeur.nom}"></td>
+                    <td th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td>
+                        <!-- Bouton Accepter -->
+                        <form th:action="@{'/admin/demandes/' + ${demande.id} + '/accepter'}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm"
+                                    title="Accepter">
+                                <i class="fa-solid fa-check"></i> Accepter
+                            </button>
+                        </form>
+
+                        <!-- Bouton Refuser -->
+                        <button type="button" class="btn btn-danger btn-sm"
+                                data-bs-toggle="modal"
+                                th:data-bs-target="'#refuseModal' + ${demande.id}"
+                                title="Refuser">
+                            <i class="fa-solid fa-times"></i> Refuser
+                        </button>
+
+                        <!-- Modal pour refus -->
+                        <div class="modal fade" th:id="'refuseModal' + ${demande.id}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Refuser la demande</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form th:action="@{'/admin/demandes/' + ${demande.id} + '/refuser'}"
+                                          method="post">
+                                        <div class="modal-body">
+                                            <label class="form-label">Commentaire (optionnel) :</label>
+                                            <textarea name="commentaire" class="form-control" rows="3"
+                                                      placeholder="Raison du refus..."></textarea>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Annuler</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                Confirmer le refus
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(demandes)}">
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="fa-solid fa-inbox fa-3x mb-3"></i>
+                        <p>Aucune demande en attente</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

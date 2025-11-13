@@ -50,6 +50,51 @@
         }
     </style>
 </head>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("membresContainer");
+        const btnAdd = document.getElementById("btnAddMembre");
+
+        // Ajouter un nouveau membre
+        btnAdd.addEventListener("click", () => {
+            const firstRow = container.querySelector(".membre-row");
+            const newRow = firstRow.cloneNode(true);
+
+            // Réinitialiser les champs
+            newRow.querySelectorAll("input").forEach(input => input.value = "");
+            newRow.querySelector(".email-error").classList.add("d-none");
+
+            container.appendChild(newRow);
+        });
+
+        // Supprimer un membre
+        container.addEventListener("click", (e) => {
+            if (e.target.classList.contains("btn-remove")) {
+                const row = e.target.closest(".membre-row");
+                if (container.children.length > 1) { // Toujours garder au moins un membre
+                    row.remove();
+                }
+            }
+        });
+
+        // Vérification de l'email via AJAX
+        container.addEventListener("input", async (e) => {
+            if (e.target.classList.contains("email-field")) {
+                const email = e.target.value;
+                const errorMsg = e.target.closest(".membre-row").querySelector(".email-error");
+                if (email.length > 5) {
+                    const res = await fetch(`/admin/check-email?email=${encodeURIComponent(email)}`);
+                    const exists = await res.json();
+                    if (!exists) {
+                        errorMsg.classList.remove("d-none");
+                    } else {
+                        errorMsg.classList.add("d-none");
+                    }
+                }
+            }
+        });
+    });
+</script>
 <body>
 
 <!-- Barre de navigation -->
@@ -104,39 +149,38 @@
         </div>
     </div>
 </nav>
+<div class="container mt-5">
+    <div class="card p-4 shadow-sm">
+        <h5>Ajouter un nouveau club</h5>
+        <form th:action="@{/clubs/demander-creation}" method="post" id="clubForm">
+            <div class="mb-2">
+                <input name="nom" class="form-control" placeholder="Nom du club" required>
+            </div>
+            <div class="mb-2">
+                <input name="description" class="form-control" placeholder="Description" required>
+            </div>
+            <div class="mb-2">
+                <input name="objectifs" class="form-control" placeholder="Objectifs" required>
+            </div>
 
-
-<!-- Contenu principal -->
-<main class="container mt-5">
-    <!-- ✅ Bloc message flash -->
-    <div th:if="${message}" class="container mt-3">
-        <div th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show text-center'" role="alert">
-            <strong th:text="${message}"></strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    </div>
-    <h2 class="mb-4 text-center">Mes Clubs</h2>
-    <a th:href="@{'/clubs/demander-creation'}" class="btn btn-success btn-lg px-4">Créer un club</a>
-    <div class="row">
-        <div class="col-md-4 mb-4" th:each="club : ${clubs}">
-            <div class="card club-card shadow-sm">
-                <img src="https://picsum.photos/400/300?random" class="card-img-top" alt="Club image">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${club.nom}">Nom du club</h5>
-                    <p class="card-text text-muted" th:text="${club.description}">Description du club</p>
-                    <a th:href="@{'/clubs/' + ${club.nom}}" class="btn btn-primary">Voir plus</a>
-                    <form th:action="@{'/clubs/' + ${club.id} + '/desadhesion'}" method="post">
-                        <button type="submit" class="btn btn-danger">
-                            Annuler mon adhésion
-                        </button>
-                    </form>
+            <h6>Membres du bureau</h6>
+            <div id="membresContainer">
+                <div class="membre-row mb-2 d-flex gap-2">
+                    <input name="emails" type="email" class="form-control email-field" placeholder="Email du membre" required>
+                    <input name="postes" type="text" class="form-control" placeholder="Poste" required>
+                    <button type="button" class="btn btn-danger btn-sm btn-remove">❌</button>
+                    <div class="text-danger email-error d-none">Email inexistant !</div>
                 </div>
             </div>
-        </div>
-    </div>
-</main>
 
-<!-- Pied de page -->
+            <button type="button" class="btn btn-primary mb-2" id="btnAddMembre">➕ Ajouter un membre</button>
+            <br>
+            <button class="btn btn-success">Envoyer la demande</button>
+        </form>
+    </div>
+</div>
+
+</body>
 <footer class="bg-dark text-white text-center py-3 mt-auto">
     <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
 </footer>

@@ -28,7 +28,7 @@ public class Evenement {
     @JoinColumn(name = "club_id")
     private Club club;
 
-    @ManyToMany(mappedBy = "evenementOrganises",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "evenementOrganises", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<MembreBureau> membreBureauList;
 
 }
