@@ -85,7 +85,6 @@
             </ul>
         </div>
 
-        <!-- Partie droite (connexion / utilisateur) -->
         <div class="d-flex align-items-center gap-3">
             <th:block th:if="${user == null}">
                 <a href="/signin" class="btn btn-outline-light px-4 py-2 rounded-pill shadow-sm transition-all">
@@ -94,6 +93,20 @@
             </th:block>
 
             <th:block th:if="${user != null}">
+                <th:block th:if="${isMembreBureau}">
+                    <a href="/gestion/demandes"
+                       class="btn btn-outline-light rounded-pill position-relative"
+                       title="Gérer les demandes">
+
+                        <i class="bi bi-bell-fill"></i> <!-- Icône de cloche -->
+
+                        <span th:if="${pendingRequestCount > 0}"
+                              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <span th:text="${pendingRequestCount}"></span>
+                            <span class="visually-hidden">demandes en attente</span>
+                        </span>
+                    </a>
+                </th:block>
                 <span class="text-light fw-semibold fs-5">
                     👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong>
                 </span>

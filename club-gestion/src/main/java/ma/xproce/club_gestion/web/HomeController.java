@@ -1,14 +1,12 @@
 package ma.xproce.club_gestion.web;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpSession;
 import ma.xproce.club_gestion.dao.entities.*;
 import ma.xproce.club_gestion.dao.repositories.*;
-import ma.xproce.club_gestion.service.AdherentService;
-import ma.xproce.club_gestion.service.EvenementService;
-import ma.xproce.club_gestion.service.MembreBureauSerive;
-import ma.xproce.club_gestion.service.UtilisateurService;
+import ma.xproce.club_gestion.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -34,6 +32,7 @@ public class HomeController {
     private final EvenementService evenementService;
     private final MembreBureauRepository membreBureauRepository;
     private final DemandeClubRepository demandeClubRepository;
+    private final DemandeAdhesionService demandeAdhesionService;
 
 
     @GetMapping("/")
@@ -187,31 +186,43 @@ public class HomeController {
         return "redirect:/";
     }
 
+    @PostMapping("/clubs/{clubId}/adhesion")
+    public String creerDemandeAdhesion(@PathVariable("clubId") Long clubId,
+                                       // Ces champs viennent du formulaire
+                                       @RequestParam("nom") String nom,
+                                       @RequestParam("description") String description,
+                                       @RequestParam("objectifs") String objectifs,
+                                       HttpSession session,
+                                       RedirectAttributes redirectAttributes) {
 
-    @PostMapping("/clubs/{id}/desadhesion")
-    public String desadhererClub(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
-        Object user = session.getAttribute("user");
-
-        if (!(user instanceof Adherent adherent)) {
-            redirectAttributes.addFlashAttribute("message", "Vous devez être adhérent pour quitter un club !");
+        Object userObj = session.getAttribute("user");
+        if (!(userObj instanceof Utilisateur userInSession)) {
+            redirectAttributes.addFlashAttribute("message", "Vous devez être connecté pour faire une demande.");
             redirectAttributes.addFlashAttribute("messageType", "warning");
             return "redirect:/signin";
         }
 
-        Club club = clubRepository.findById(id).get();
-        Adherent adherentInDb = adherentRepository.findById(adherent.getId()).get();
+        try {
+            demandeAdhesionService.creerDemandeAdhesion(
+                    nom,
+                    description,
+                    objectifs,
+                    clubId,
+                    userInSession.getId()
+            );
 
-        club.getAdherents().remove(adherentInDb);
-        clubRepository.save(club);
-        adherentInDb.getClubs().remove(club);
-        adherentRepository.save(adherentInDb);
+            redirectAttributes.addFlashAttribute("message", "Votre demande d'adhésion a été envoyée !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
 
-        session.setAttribute("user", adherentInDb);
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+        }
 
-        redirectAttributes.addFlashAttribute("message", "🚫 Vous avez quitté le club " + club.getNom() + ".");
-        redirectAttributes.addFlashAttribute("messageType", "info");
-
-        return "redirect:/mes-clubs";
+        return "redirect:/clubs/" + clubId;
     }
 
 
@@ -423,6 +434,29 @@ public class HomeController {
         return "redirect:/mes-clubs";
     }
 
+    @GetMapping("/gestion/demandes")
+    public String showDemandesPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+
+        Object userObj = session.getAttribute("user");
+        if (userObj == null) {
+            redirectAttributes.addFlashAttribute("message", "Accès refusé.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/";
+        }
+
+        List<DemandeAdhesion> demandes = demandeAdhesionService.findByStatut("EN_ATTENTE");
+        model.addAttribute("demandesEnAttente", demandes);
+
+        // Gérer les messages flash (si une demande vient d'être acceptée/refusée)
+        if (session.getAttribute("message") != null) {
+            model.addAttribute("message", session.getAttribute("message"));
+            model.addAttribute("messageType", session.getAttribute("messageType"));
+            session.removeAttribute("message");
+            session.removeAttribute("messageType");
+        }
+
+        return "gestion-demandes";
+    }
 
 
 

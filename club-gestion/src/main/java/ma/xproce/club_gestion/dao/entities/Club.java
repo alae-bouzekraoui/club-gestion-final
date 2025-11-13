@@ -37,4 +37,6 @@ public class Club {
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Realisation> realisationList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "club", fetch = FetchType.LAZY)
+    private List<DemandeAdhesion> demandeAdhesionList = new ArrayList<>();
 }

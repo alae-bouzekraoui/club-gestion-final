@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gérer les demandes d'adhésion</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+
+<!-- Navbar (vous pouvez la copier de l'index.html ou utiliser des fragments Thymeleaf) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <a class="navbar-brand" href="/">ENSAM Casablanca</a>
+    <!-- ... (Ajoutez le reste de la navbar si nécessaire) ... -->
+</nav>
+
+<div class="container mt-5">
+
+        <!-- Affichage des messages flash (succès, erreur, etc.) -->
+        <div th:if="${message}" th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <h1><i class="bi bi-person-check-fill"></i> Gérer les demandes d'adhésion</h1>
+        <p>Page réservée aux membres du bureau.</p>
+
+        <hr>
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h3>Demandes "En Attente"</h3>
+            </div>
+            <div class="card-body">
+
+                <div th:if="${demandesEnAttente.isEmpty()}" class="alert alert-secondary text-center">
+                    <i class="bi bi-wind"></i> Aucune demande en attente pour le moment.
+                </div>
+
+                <table class="table table-hover align-middle" th:unless="${demandesEnAttente.isEmpty()}">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Demandeur</th>
+                        <th>Club</th>
+                        <th>Date de la demande</th>
+                        <th>Motivation</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="demande : ${demandesEnAttente}">
+                        <td th:text="${demande.demandeur.prenom + ' ' + demande.demandeur.nom}">Nom Demandeur</td>
+                        <td class-><strong><span th:text="${demande.club.nom}"></span></strong></td>
+                        <td th:text="${#temporals.format(demande.dateDemande, 'dd/MM/yyyy HH:mm')}">Date</td>
+                        <td>
+                            <!-- Bouton pour voir la motivation (si vous utilisez les champs nom/description) -->
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    data-bs-toggle="modal"
+                                    th:data-bs-target="'#modal' + ${demande.id}">
+                                <i class="bi bi-eye"></i> Voir
+                            </button>
+                        </td>
+                        <td class="text-center">
+                            <!-- Accepter -->
+                            <form th:action="@{'/gestion/demande/' + ${demande.id} + '/accepter'}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-success btn-sm" title="Accepter">
+                                    <i class="bi bi-check-lg"></i> Accepter
+                                </button>
+                            </form>
+
+                            <!-- Refuser -->
+                            <form th:action="@{'/gestion/demande/' + ${demande.id} + '/refuser'}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Refuser">
+                                    <i class="bi bi-x-lg"></i> Refuser
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modals (Pop-ups) pour lire les motivations -->
+        <div th:each="demande : ${demandesEnAttente}">
+            <div class="modal fade" th:id="'modal' + ${demande.id}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Demande de <span th:text="${demande.demandeur.prenom}"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h6 class="fw-bold">Titre de la demande :</h6>
+                            <p th:text="${demande.nom}"></p>
+
+                            <h6 class="fw-bold">Présentation :</h6>
+                            <p th:text="${demande.description}"></p>
+
+                            <h6 class="fw-bold">Objectifs / Motivation :</h6>
+                            <p th:text="${demande.objectifs}"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <a href="/" class="btn btn-secondary mt-3">
+        <i class="bi bi-arrow-left"></i> Retour à l'accueil
+    </a>
+</div>
+
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
