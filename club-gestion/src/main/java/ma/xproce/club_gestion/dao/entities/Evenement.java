@@ -21,8 +21,15 @@ public class Evenement {
     private String lieu;
     private String etat;
 
-    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToMany
+    @JoinTable(
+            name = "evenement_participants",
+            joinColumns = @JoinColumn(name = "evenements_id"),
+            inverseJoinColumns = @JoinColumn(name = "participants_id")
+    )
     private List<Adherent> participants = new ArrayList<>();
+
+
 
     @ManyToOne
     @JoinColumn(name = "club_id")

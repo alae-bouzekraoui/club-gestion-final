@@ -15,8 +15,9 @@ import java.util.List;
 public class Adherent extends Utilisateur{
 
     //relation adherent-evenement
-    @ManyToMany(mappedBy = "participants", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "participants")
     private List<Evenement> evenements = new ArrayList<>();
+
 
     //relation adherent-club
     @ManyToMany(mappedBy = "adherents", fetch = FetchType.EAGER)

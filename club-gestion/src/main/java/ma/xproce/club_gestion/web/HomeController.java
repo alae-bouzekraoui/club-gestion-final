@@ -1,34 +1,29 @@
 package ma.xproce.club_gestion.web;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpSession;
 import ma.xproce.club_gestion.dao.entities.*;
 import ma.xproce.club_gestion.dao.repositories.*;
 import ma.xproce.club_gestion.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
 
     private final UtilisateurService utilisateurService;
-    private final MembreBureauSerive membreBureauSerive;
     private final ClubRepository clubRepository;
     private final AdherentRepository adherentRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final AdherentService adherentService;
+    private final MembreBureauService membreBureauService;
     private final EvenementService evenementService;
     private final MembreBureauRepository membreBureauRepository;
     private final DemandeClubRepository demandeClubRepository;
@@ -188,7 +183,6 @@ public class HomeController {
 
     @PostMapping("/clubs/{clubId}/adhesion")
     public String creerDemandeAdhesion(@PathVariable("clubId") Long clubId,
-                                       // Ces champs viennent du formulaire
                                        @RequestParam("nom") String nom,
                                        @RequestParam("description") String description,
                                        @RequestParam("objectifs") String objectifs,
@@ -228,39 +222,35 @@ public class HomeController {
 
     @GetMapping("/calendrier")
     public String calendrier(HttpSession session, Model model) {
+
         Utilisateur user = (Utilisateur) session.getAttribute("user");
         if (user == null) return "redirect:/signin";
 
         model.addAttribute("role", user.getRole());
         List<Evenement> evenements = new ArrayList<>();
 
-//        switch (user.getRole()){
-//            case "AHERENT":
-//                Adherent adherent = adherentService.getAdherentFromUser(user);
-//                List<Evenement> adherentEvenements = adherentService.getListOfAdherentEvents(adherent);
-//
-//                if (adherentEvenements == null) {
-//                    adherentEvenements = new ArrayList<>();
-//                }
-//
-//                model.addAttribute("adherentEvenements", adherentEvenements);
-//                break;
-//
-//            case "MembreBureau":
-//                MembreBureau membreBureau = membreBureauSerive.
-//                List<Evenement> adherentEvenements = adherentService.getListOfAdherentEvents(adherent);
-//
-//                if (adherentEvenements == null) {
-//                    adherentEvenements = new ArrayList<>();
-//                }
-//
-//                model.addAttribute("adherentEvenements", adherentEvenements);
-//                break;
-//
-//        }
+        switch (user.getRole()) {
+
+            case "ADHERENT":
+                Adherent adherent = adherentService.getAdherentFromUser(user);
+                if (adherent != null) {
+                    evenements = adherentService.getListOfAdherentEvents(adherent);
+                }
+                break;
+
+            case "MembreBureau":
+                MembreBureau mb = membreBureauService.getMembreFromUser(user);
+                if (mb != null) {
+                    evenements = membreBureauService.getListOfEventsForMembre(mb);
+                }
+                break;
+        }
+
+        if (evenements == null) evenements = new ArrayList<>();
 
         model.addAttribute("user", user);
-        model.addAttribute("evenements",evenements);
+        model.addAttribute("evenements", evenements);
+
         return "calendrier";
     }
 
@@ -284,6 +274,7 @@ public class HomeController {
 
         return "club-details";
     }
+
 
     @GetMapping("/evenements")
     public String showEvenements(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -309,7 +300,7 @@ public class HomeController {
                 break;
 
             case "MembreBureau":
-                MembreBureau membre = membreBureauSerive.getMembreFromUser(user) ;
+                MembreBureau membre = membreBureauService.getMembreFromUser(user) ;
                 List<Club> clubsMembreBureau = membre.getClubList();
                 if (clubsMembreBureau == null) {
                     clubsMembreBureau = new ArrayList<>();
@@ -325,14 +316,12 @@ public class HomeController {
         return "evenements";
     }
 
+
     @PostMapping("/evenements/add")
     public String addEvenement(
             @ModelAttribute Evenement evenement,
-
             @RequestParam("clubId") Long clubId,
-
-            RedirectAttributes redirectAttributes
-        ) {
+            RedirectAttributes redirectAttributes) {
 
         Club club = clubRepository.findById(clubId)
                 .orElse(null);
@@ -355,6 +344,7 @@ public class HomeController {
         return "redirect:/evenements";
     }
 
+
     @PostMapping("/evenements/supprimer/{id}")
     public String supprimerEvenement(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -369,26 +359,48 @@ public class HomeController {
         return "redirect:/evenements";
     }
 
+
     @PostMapping("/evenements/Ajout_au_calendrier/{id}")
     public String ajoutEvenemetCalendrier(
             @PathVariable Long id,
             RedirectAttributes redirectAttributes,
-            HttpSession session
-    ){
+            HttpSession session){
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter pour accéder aux événements.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
             return "redirect:/signin";
         }
         Adherent adherent = adherentService.getAdherentFromUser(user);
+        boolean added = evenementService.ajoutEvenementCalendrier(id, adherent);
 
-        evenementService.ajoutEvenementCalendrier(id,adherent);
+        if (!added) {
+            redirectAttributes.addFlashAttribute("message", "Cet événement est déjà dans votre calendrier.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Événement ajouté à votre calendrier !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        }
 
-        return "calendrier";
+        return "redirect:/evenements";
 
     }
+
+
+    @PostMapping("/evenements/supprimer_du_calendrier/{id}")
+    public String removeEventFromCalendar(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) return "redirect:/signin";
+
+        Adherent adherent = adherentService.getAdherentFromUser(user);
+        boolean removed = evenementService.removeEventFromCalendar(id, adherent);
+
+        redirectAttributes.addFlashAttribute("message", "Événement retiré !");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+
+        return "redirect:/calendrier";
+    }
+
 
     @GetMapping("/clubs/demander-creation")
     public String showClubCreationForm(Model model, HttpSession session) {
@@ -396,6 +408,7 @@ public class HomeController {
         model.addAttribute("user", user);
         return "demander-creation";
     }
+
 
     @PostMapping("/clubs/demander-creation")
     public String createClubRequest(@RequestParam String nom,
@@ -434,6 +447,7 @@ public class HomeController {
         return "redirect:/mes-clubs";
     }
 
+
     @GetMapping("/gestion/demandes")
     public String showDemandesPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
 
@@ -457,7 +471,4 @@ public class HomeController {
 
         return "gestion-demandes";
     }
-
-
-
 }

@@ -13,17 +13,16 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MembreBureauSerive {
+public class MembreBureauService {
 
     private final MembreBureauRepository membreBureauRepository;
 
-    public MembreBureau getMembreFromUser (Utilisateur user){
-        return membreBureauRepository.getById(user.getId());
+    public MembreBureau getMembreFromUser(Utilisateur user) {
+        return membreBureauRepository.findById(user.getId())
+                .orElse(null);
     }
 
-    public List<Evenement> getListOfMembreBureauEvents(MembreBureau membreBureau){
-        return membreBureau.getEvenementOrganises();
+    public List<Evenement> getListOfEventsForMembre(MembreBureau membre) {
+        return membre.getEvenementOrganises();
     }
-
-
 }

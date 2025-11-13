@@ -20,6 +20,7 @@ public class AdherentService {
         return adherentRepository.getById(user.getId());
     }
 
+
     public List<Evenement> getListOfAdherentEvents(Adherent adherent){
         return adherent.getEvenements();
     }
