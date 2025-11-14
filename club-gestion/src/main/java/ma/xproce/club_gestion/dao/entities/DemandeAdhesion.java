@@ -14,9 +14,6 @@ public class DemandeAdhesion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nom;
-    private String description;
-    private String objectifs;
     private LocalDateTime dateDemande = LocalDateTime.now();
 
     @ManyToOne

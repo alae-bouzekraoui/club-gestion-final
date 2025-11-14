@@ -20,6 +20,9 @@ public class MembreBureau extends Utilisateur{
     @ManyToMany(mappedBy = "membreBureauList",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Club> clubList;
 
+    @ManyToMany(mappedBy = "membreBureauAdheranList",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    private List<Club> clubListAdherent;
+
     //relation membreBureau-realisation
     @OneToMany(mappedBy = "membreBureau", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Realisation> realisationList;

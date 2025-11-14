@@ -55,19 +55,17 @@
         const container = document.getElementById("membresContainer");
         const btnAdd = document.getElementById("btnAddMembre");
 
-        // Ajouter un nouveau membre
+
         btnAdd.addEventListener("click", () => {
             const firstRow = container.querySelector(".membre-row");
             const newRow = firstRow.cloneNode(true);
 
-            // Réinitialiser les champs
             newRow.querySelectorAll("input").forEach(input => input.value = "");
             newRow.querySelector(".email-error").classList.add("d-none");
 
             container.appendChild(newRow);
         });
 
-        // Supprimer un membre
         container.addEventListener("click", (e) => {
             if (e.target.classList.contains("btn-remove")) {
                 const row = e.target.closest(".membre-row");

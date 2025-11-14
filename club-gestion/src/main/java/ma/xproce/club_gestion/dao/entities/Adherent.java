@@ -21,5 +21,6 @@ public class Adherent extends Utilisateur{
 
     //relation adherent-club
     @ManyToMany(mappedBy = "adherents", fetch = FetchType.EAGER)
+    @ToString.Exclude
     private List<Club> clubs = new ArrayList<>();
 }

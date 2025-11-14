@@ -20,14 +20,13 @@ public class HomeController {
 
     private final UtilisateurService utilisateurService;
     private final ClubRepository clubRepository;
-    private final AdherentRepository adherentRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final AdherentService adherentService;
     private final MembreBureauService membreBureauService;
     private final EvenementService evenementService;
-    private final MembreBureauRepository membreBureauRepository;
     private final DemandeClubRepository demandeClubRepository;
     private final DemandeAdhesionService demandeAdhesionService;
+    private final ClubService clubService;
 
 
     @GetMapping("/")
@@ -113,96 +112,19 @@ public class HomeController {
     }
 
 
-    @PostMapping("/clubs/{id}/adhesion")
-    public String adhererClub(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-        if (user == null) return "redirect:/signin";
-
-        Club club = clubRepository.findById(id).get();
-
-        if (user instanceof Adherent adherent) {
-            if (adherent.getClubs().stream().anyMatch(c -> c.getId().equals(club.getId()))) {
-                redirectAttributes.addFlashAttribute("message", "Vous êtes déjà membre de ce club !");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/";
-            }
-
-            adherent.getClubs().add(club);
-            adherentRepository.save(adherent);
-            club.getAdherents().add(adherent);
-            clubRepository.save(club);
-
-            session.setAttribute("user", adherent);
-            redirectAttributes.addFlashAttribute("message", "Vous avez rejoint le club " + club.getNom());
-            redirectAttributes.addFlashAttribute("messageType", "success");
-            return "redirect:/";
-        }
-
-        if (user instanceof MembreBureau membreBureau) {
-            if (membreBureau.getClubList().stream().anyMatch(c -> c.getId().equals(club.getId()))) {
-                redirectAttributes.addFlashAttribute("message", "Vous êtes déjà membre de ce club !");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/";
-            }
-
-            membreBureau.getClubList().add(club);
-            membreBureauRepository.save(membreBureau);
-            club.getMembreBureauList().add(membreBureau);
-            clubRepository.save(club);
-
-            session.setAttribute("user", membreBureau);
-            redirectAttributes.addFlashAttribute("message", "✅ Vous êtes désormais lié au club " + club.getNom() + " en tant que membre du bureau !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-            return "redirect:/";
-        }
-
-        //  Sinon : transformer l’utilisateur en Adhérent
-        Adherent newAdherent = new Adherent();
-        newAdherent.setNom(user.getNom());
-        newAdherent.setPrenom(user.getPrenom());
-        newAdherent.setEmail(user.getEmail());
-        newAdherent.setMotDePasse(user.getMotDePasse());
-        newAdherent.setRole("ADHERENT");
-
-        utilisateurRepository.deleteById(user.getId());
-        adherentRepository.save(newAdherent);
-
-        newAdherent.getClubs().add(club);
-        adherentRepository.save(newAdherent);
-        club.getAdherents().add(newAdherent);
-        clubRepository.save(club);
-
-        // Mettre à jour la session
-        session.setAttribute("user", newAdherent);
-
-        redirectAttributes.addFlashAttribute("message", " Vous êtes désormais membre du club " + club.getNom() + " !");
-        redirectAttributes.addFlashAttribute("messageType", "success");
-
-        return "redirect:/";
-    }
-
     @PostMapping("/clubs/{clubId}/adhesion")
-    public String creerDemandeAdhesion(@PathVariable("clubId") Long clubId,
-                                       @RequestParam("nom") String nom,
-                                       @RequestParam("description") String description,
-                                       @RequestParam("objectifs") String objectifs,
+    public String creerDemandeAdhesion(@PathVariable Long clubId,
                                        HttpSession session,
                                        RedirectAttributes redirectAttributes) {
 
-        Object userObj = session.getAttribute("user");
-        if (!(userObj instanceof Utilisateur userInSession)) {
-            redirectAttributes.addFlashAttribute("message", "Vous devez être connecté pour faire une demande.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
-            return "redirect:/signin";
-        }
+        Club club = clubService.getClubById(clubId);
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) return "redirect:/signin";
 
         try {
-            demandeAdhesionService.creerDemandeAdhesion(
-                    nom,
-                    description,
-                    objectifs,
+            demandeAdhesionService.ajouterDemandeAdhesion(
                     clubId,
-                    userInSession.getId()
+                    user
             );
 
             redirectAttributes.addFlashAttribute("message", "Votre demande d'adhésion a été envoyée !");
@@ -216,7 +138,7 @@ public class HomeController {
             redirectAttributes.addFlashAttribute("messageType", "warning");
         }
 
-        return "redirect:/clubs/" + clubId;
+        return "redirect:/clubs/" + club.getNom();
     }
 
 
@@ -254,27 +176,29 @@ public class HomeController {
         return "calendrier";
     }
 
+    @GetMapping("/clubs/{clubNom}")
+    public String showClubDetails(@PathVariable String clubNom, Model model, HttpSession session) {
 
-    @GetMapping("/clubs/{nom}")
-    public String voirClub(@PathVariable String nom, Model model, HttpSession session) {
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-        Club club = clubRepository.findByNom(nom);
+        Club club = clubService.getClubByNom(clubNom); // ou getClubById
         model.addAttribute("club", club);
+        model.addAttribute("clubName", club.getNom());
 
-        // Vérifier si l'utilisateur est déjà adhérent
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+
         boolean isAlreadyMember = false;
-            if (user instanceof Adherent) {
-                Adherent adherent = (Adherent) user;
-                isAlreadyMember = club.getAdherents().stream()
-                        .anyMatch(a -> a.getId().equals(adherent.getId()));
-            }
+        boolean hasPendingRequest = false;
+
+        if (user != null) {
+            isAlreadyMember = adherentService.isUserMember(user.getId(), club.getId());
+
+            hasPendingRequest = demandeAdhesionService.hasPendingRequest(user.getId(), club.getId());
+        }
 
         model.addAttribute("isAlreadyMember", isAlreadyMember);
-        model.addAttribute("user", user);
+        model.addAttribute("hasPendingRequest", hasPendingRequest);
 
         return "club-details";
     }
-
 
     @GetMapping("/evenements")
     public String showEvenements(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -447,28 +371,65 @@ public class HomeController {
         return "redirect:/mes-clubs";
     }
 
-
     @GetMapping("/gestion/demandes")
     public String showDemandesPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
 
-        Object userObj = session.getAttribute("user");
-        if (userObj == null) {
-            redirectAttributes.addFlashAttribute("message", "Accès refusé.");
+
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            return "redirect:/signin";
+        }
+
+        MembreBureau membreBureau = membreBureauService.getMembreFromUser(user);
+        if (membreBureau == null) {
+            redirectAttributes.addFlashAttribute("message", "Accès non autorisé. Réservé aux membres du bureau.");
             redirectAttributes.addFlashAttribute("messageType", "danger");
             return "redirect:/";
         }
 
-        List<DemandeAdhesion> demandes = demandeAdhesionService.findByStatut("EN_ATTENTE");
+
+        List<Club> managedClubs = membreBureau.getClubList();
+
+        if (managedClubs == null || managedClubs.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : Vous n'êtes associé à aucun club.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/";
+        }
+
+        List<DemandeAdhesion> demandes = demandeAdhesionService.getPendingRequestsForClubs(managedClubs);
+
         model.addAttribute("demandesEnAttente", demandes);
 
-        // Gérer les messages flash (si une demande vient d'être acceptée/refusée)
-        if (session.getAttribute("message") != null) {
-            model.addAttribute("message", session.getAttribute("message"));
-            model.addAttribute("messageType", session.getAttribute("messageType"));
-            session.removeAttribute("message");
-            session.removeAttribute("messageType");
-        }
+        model.addAttribute("managedClubs", managedClubs);
 
         return "gestion-demandes";
     }
+
+    @PostMapping("/gestion/demandes/{demandeAdhesionId}/accepter")
+    public String accepterDemandeAdhesion(@PathVariable Long demandeAdhesionId,
+                                          HttpSession session,
+                                          RedirectAttributes redirectAttributes){
+
+        demandeAdhesionService.accepterDemandeAdhesion(demandeAdhesionId);
+        redirectAttributes.addFlashAttribute("message",
+                "Vous avez accépté la demande ");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/gestion/demandes";
+    }
+
+    @PostMapping("/gestion/demandes/{demandeAdhesionId}/refuser")
+    public String refuserDemandeAdhesion(@PathVariable Long demandeAdhesionId,
+                                          HttpSession session,
+                                          RedirectAttributes redirectAttributes){
+
+        demandeAdhesionService.refuserDemandeAdhesion(demandeAdhesionId);
+        redirectAttributes.addFlashAttribute("message",
+                "Vous avez refusé la demande ");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/gestion/demandes";
+    }
+
+
 }

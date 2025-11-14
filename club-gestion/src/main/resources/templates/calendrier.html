@@ -92,7 +92,7 @@
             </th:block>
 
             <th:block th:if="${user != null}">
-                <th:block th:if="${isMembreBureau}">
+                <th:block th:if="${user.role == 'MembreBureau' }">
                     <a href="/gestion/demandes"
                        class="btn btn-outline-light rounded-pill position-relative"
                        title="Gérer les demandes">
