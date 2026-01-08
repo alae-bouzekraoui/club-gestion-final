@@ -1,63 +1,115 @@
 package ma.xproce.club_gestion.service;
 
-
-import lombok.RequiredArgsConstructor;
-import ma.xproce.club_gestion.dao.entities.Adherent;
-import ma.xproce.club_gestion.dao.entities.Club;
-import ma.xproce.club_gestion.dao.entities.Evenement;
-import ma.xproce.club_gestion.dao.entities.Utilisateur;
+import ma.xproce.club_gestion.dao.entities.*;
 import ma.xproce.club_gestion.dao.repositories.AdherentRepository;
 import ma.xproce.club_gestion.dao.repositories.ClubRepository;
 import ma.xproce.club_gestion.dao.repositories.EvenementRepository;
+import ma.xproce.club_gestion.dao.repositories.MembreBureauRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-public class EvenementService {
+public class EvenementService implements IEvenementService {
 
-    private final EvenementRepository evenementRepository;
-    private final AdherentRepository adherentRepository;
-    private final ClubRepository clubRepository;
+    @Autowired
+    private EvenementRepository evenementRepository;
+    @Autowired
+    private AdherentRepository adherentRepository;
+    @Autowired
+    private MembreBureauRepository membreBureauRepository;
+    @Autowired
+    private ClubRepository clubRepository;
 
-    public Evenement ajouterEvenement(Club club, Evenement evenement) {
-        evenement.setClub(club);
-        return evenementRepository.save(evenement);
+    @Override
+    @Transactional
+    public List<Evenement> getEvenementsPourUtilisateur(Utilisateur user) {
+        if (user == null) return new ArrayList<>();
+
+        if (user instanceof Adherent) {
+            Adherent adherent = adherentRepository.findById(user.getId()).orElse(null);
+            if (adherent != null) {
+                return recupererEvenementsAdherent(adherent);
+            }
+        }
+
+        if (user instanceof MembreBureau) {
+            MembreBureau mb = membreBureauRepository.findById(user.getId()).orElse(null);
+            if (mb != null) {
+                return recupererEvenementsDesClubsMembre(mb);
+            }
+        }
+
+        return new ArrayList<>();
     }
 
-    public void supprimerEvenement(Long id){
-        Evenement evenement = evenementRepository.findById(id)
+    private List<Evenement> recupererEvenementsAdherent(Adherent a) {
+        List<Evenement> events = new ArrayList<>();
+        for (Club club : a.getClubs()) {
+            events.addAll(club.getEvenementList());
+        }
+        return events;
+    }
+
+    private List<Evenement> recupererEvenementsDesClubsMembre(MembreBureau mb) {
+        List<Evenement> events = new ArrayList<>();
+        for (Club club : mb.getClubList()) {
+            events.addAll(club.getEvenementList());
+        }
+        return events;
+    }
+
+
+    @Override
+    @Transactional
+    public void ajouterEvenement(Long clubId, Evenement evenement) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("Club non trouvé avec l'id : " + clubId));
+        evenement.setClub(club);
+        evenementRepository.save(evenement);
+    }
+
+    @Override
+    @Transactional
+    public void supprimerEvenement(Long id) {
+        // On vérifie l'existence pour pouvoir lancer une exception personnalisée si besoin
+        if (!evenementRepository.existsById(id)) {
+            throw new RuntimeException("L'événement avec l'ID " + id + " n'existe pas.");
+        }
+        evenementRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public boolean ajoutEvenementCalendrier(Long evenementId, Long utilisateurId) {
+        Adherent adherent = adherentRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Adhérent non trouvé"));
+
+        Evenement evenement = evenementRepository.findById(evenementId)
                 .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
 
-        evenementRepository.delete(evenement);
-    }
+        if (adherent.getEvenements().contains(evenement)) {
+            return false; // Déjà présent
+        }
 
-    public boolean ajoutEvenementCalendrier(Long eventId, Adherent adherent) {
-
-        Evenement event = evenementRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Événement introuvable"));
-
-        boolean existe = adherent.getEvenements().stream()
-                .anyMatch(e -> e.getId().equals(event.getId()));
-
-        if (existe) { return false; }
-
-        event.getParticipants().add(adherent);
-        evenementRepository.save(event);
+        adherent.getEvenements().add(evenement);
+        adherentRepository.save(adherent);
         return true;
     }
 
-    public boolean removeEventFromCalendar(Long eventId, Adherent adherent) {
-        Evenement event = evenementRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Événement introuvable"));
+    @Override
+    @Transactional
+    public void retirerEvenementDuCalendrier(Long evenementId, Long utilisateurId) {
+        Adherent adherent = adherentRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Adhérent non trouvé"));
 
-        boolean exists = event.getParticipants().removeIf(p -> p.getId().equals(adherent.getId()));
-        if (!exists) return false;
+        Evenement evenement = evenementRepository.findById(evenementId)
+                .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
 
-        evenementRepository.save(event);
-        return true;
+        adherent.getEvenements().remove(evenement);
+        adherentRepository.save(adherent);
     }
-
 
 }

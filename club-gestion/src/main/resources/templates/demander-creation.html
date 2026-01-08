@@ -2,188 +2,158 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Mes Clubs - ENSAM Casablanca</title>
+    <title>Demander la création d'un club - ENSAM Casablanca</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        main {
-            flex: 1;
-        }
-        .club-card {
-            transition: transform 0.2s ease;
-        }
-        .club-card:hover {
-            transform: scale(1.03);
-        }
-        .hover-underline {
-            position: relative;
-            color: #f8f9fa !important;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        .hover-underline::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 3px;
-            left: 0;
-            bottom: -4px;
-            background-color: #0d6efd;
-            transition: width 0.3s;
-        }
-        .hover-underline:hover::after {
-            width: 100%;
-        }
-        .hover-underline:hover {
-            color: #0d6efd !important;
-        }
-        .transition-all {
-            transition: all 0.3s ease-in-out;
-        }
-        .transition-all:hover {
-            transform: scale(1.08);
-        }
+        body { background-color: #f8f9fa; min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1; }
+        .hover-underline { position: relative; color: #f8f9fa !important; text-decoration: none; transition: color 0.3s ease; }
+        .hover-underline::after { content: ''; position: absolute; width: 0; height: 3px; left: 0; bottom: -4px; background-color: #0d6efd; transition: width 0.3s; }
+        .hover-underline:hover::after { width: 100%; }
+        .hover-underline:hover { color: #0d6efd !important; }
     </style>
 </head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
+     style="background: linear-gradient(90deg, #001233, #2474d1); font-size: 1.15rem; width: 100%;">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="/" style="font-size: 1.4rem;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="logo" width="45" height="45" class="me-2">
+            ENSAM Casablanca
+        </a>
+        <div class="collapse navbar-collapse justify-content-center">
+            <ul class="navbar-nav mx-auto d-flex gap-5">
+                <th:block th:if="${user != null}">
+                    <li class="nav-item"><a class="nav-link hover-underline fw-semibold" href="/mes-clubs">🏅 Mes Clubs</a></li>
+                    <li class="nav-item"><a class="nav-link hover-underline fw-semibold" href="/calendrier">📅 Mon Calendrier</a></li>
+                    <li class="nav-item"><a class="nav-link hover-underline fw-semibold" href="/evenements">🎉 Événements</a></li>
+                </th:block>
+            </ul>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <th:block th:if="${user != null}">
+                <span class="text-light fw-semibold fs-5">👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong></span>
+                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm">Déconnexion</a>
+            </th:block>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card p-4 shadow-sm">
+        <h2 class="mb-4">Ajouter un nouveau club</h2>
+
+        <div th:if="${message}" th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'" role="alert">
+            <strong th:text="${message}"></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <form th:action="@{/clubs/demander-creation}" method="post" id="clubForm">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nom du club</label>
+                <input name="nom" class="form-control" placeholder="Nom du club"
+                       th:value="${demande != null ? demande.nom : ''}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <textarea name="description" class="form-control" rows="3" placeholder="Description du club" required
+                          th:text="${demande != null ? demande.description : ''}"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Objectifs</label>
+                <input name="objectifs" class="form-control" placeholder="Objectifs principaux"
+                       th:value="${demande != null ? demande.objectifs : ''}" required>
+            </div>
+
+            <h5 class="mt-4">Membres du bureau</h5>
+            <div id="membresContainer">
+
+                <div th:if="${emailsSaisis == null}" class="membre-row mb-3 border p-3 rounded bg-light">
+                    <div class="d-flex gap-2">
+                        <input name="emails" type="email" class="form-control email-field" placeholder="Email du membre" required>
+                        <input name="postes" type="text" class="form-control" placeholder="Poste (ex: Président)" required>
+                        <button type="button" class="btn btn-outline-danger btn-remove">❌</button>
+                    </div>
+                    <div class="text-danger email-error d-none mt-1 small">Email inexistant dans la base !</div>
+                </div>
+
+                <div th:if="${emailsSaisis != null}" th:each="email, iter : ${emailsSaisis}" class="membre-row mb-3 border p-3 rounded bg-light">
+                    <div class="d-flex gap-2">
+                        <input name="emails" type="email" class="form-control email-field"
+                               th:value="${email}" placeholder="Email du membre" required>
+                        <input name="postes" type="text" class="form-control"
+                               th:value="${postesSaisis != null ? postesSaisis[iter.index] : ''}" placeholder="Poste" required>
+                        <button type="button" class="btn btn-outline-danger btn-remove">❌</button>
+                    </div>
+                    <div class="text-danger email-error d-none mt-1 small">Email inexistant !</div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-outline-primary" id="btnAddMembre">➕ Ajouter un membre</button>
+                <button type="submit" class="btn btn-success px-5">Envoyer la demande</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("membresContainer");
         const btnAdd = document.getElementById("btnAddMembre");
 
-        // Ajouter un nouveau membre
+        // ✅ Ajouter un nouveau membre dynamiquement
         btnAdd.addEventListener("click", () => {
-            const firstRow = container.querySelector(".membre-row");
-            const newRow = firstRow.cloneNode(true);
+            const rows = container.querySelectorAll(".membre-row");
+            const newRow = rows[0].cloneNode(true);
 
-            // Réinitialiser les champs
-            newRow.querySelectorAll("input").forEach(input => input.value = "");
+            // Réinitialiser les champs de la nouvelle ligne
+            newRow.querySelectorAll("input").forEach(input => {
+                input.value = "";
+                input.removeAttribute("value"); // Nettoyage Thymeleaf
+            });
             newRow.querySelector(".email-error").classList.add("d-none");
 
             container.appendChild(newRow);
         });
 
-        // Supprimer un membre
+        // ✅ Supprimer un membre (Délégation d'événement)
         container.addEventListener("click", (e) => {
-            if (e.target.classList.contains("btn-remove")) {
-                const row = e.target.closest(".membre-row");
-                if (container.children.length > 1) { // Toujours garder au moins un membre
-                    row.remove();
+            if (e.target.closest(".btn-remove")) {
+                const rows = container.querySelectorAll(".membre-row");
+                if (rows.length > 1) {
+                    e.target.closest(".membre-row").remove();
+                } else {
+                    alert("Le bureau doit contenir au moins un membre.");
                 }
             }
         });
 
-        // Vérification de l'email via AJAX
+        // ✅ Vérification AJAX de l'email (Optionnel)
         container.addEventListener("input", async (e) => {
             if (e.target.classList.contains("email-field")) {
                 const email = e.target.value;
-                const errorMsg = e.target.closest(".membre-row").querySelector(".email-error");
-                if (email.length > 5) {
-                    const res = await fetch(`/admin/check-email?email=${encodeURIComponent(email)}`);
-                    const exists = await res.json();
-                    if (!exists) {
-                        errorMsg.classList.remove("d-none");
-                    } else {
-                        errorMsg.classList.add("d-none");
+                const row = e.target.closest(".membre-row");
+                const errorMsg = row.querySelector(".email-error");
+
+                if (email.includes("@")) {
+                    // Remplacez par votre endpoint réel si nécessaire
+                    const res = await fetch(`/check-email?email=${encodeURIComponent(email)}`);
+                    if (res.ok) {
+                        const exists = await res.json();
+                        exists ? errorMsg.classList.add("d-none") : errorMsg.classList.remove("d-none");
                     }
                 }
             }
         });
     });
 </script>
-<body>
-
-<!-- Barre de navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3 px-5"
-     style="background: linear-gradient(90deg, #001233, #2474d1); font-size: 1.15rem; width: 100%;">
-
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-
-        <!-- Logo -->
-        <a class="navbar-brand d-flex align-items-center fw-bold text-white" href="/" style="font-size: 1.4rem;">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png"
-                 alt="logo" width="45" height="45" class="me-2">
-            ENSAM Casablanca
-        </a>
-
-        <!-- Liens centrés -->
-        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav mx-auto d-flex justify-content-center align-items-center gap-5">
-                <th:block th:if="${user != null}">
-                    <li class="nav-item">
-                        <a th:classappend="${activePage == 'mes-clubs'} ? 'text-warning' : ''"
-                           class="nav-link hover-underline fw-semibold" href="/mes-clubs">🏅 Mes Clubs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:classappend="${activePage == 'calendrier'} ? 'text-warning' : ''"
-                           class="nav-link hover-underline fw-semibold" href="/calendrier">📅 Mon Calendrier</a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:classappend="${activePage == 'evenements'} ? 'text-warning' : ''"
-                           class="nav-link hover-underline fw-semibold" href="/evenements">🎉 Événements</a>
-                    </li>
-                </th:block>
-            </ul>
-        </div>
-
-        <!-- Partie droite (connexion / utilisateur) -->
-        <div class="d-flex align-items-center gap-3">
-            <th:block th:if="${user == null}">
-                <a href="/signin" class="btn btn-outline-light px-4 py-2 rounded-pill shadow-sm transition-all">
-                    Se connecter
-                </a>
-            </th:block>
-
-            <th:block th:if="${user != null}">
-                <span class="text-light fw-semibold fs-5">
-                    👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong>
-                </span>
-                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm transition-all">
-                    Déconnexion
-                </a>
-            </th:block>
-        </div>
-    </div>
-</nav>
-<div class="container mt-5">
-    <div class="card p-4 shadow-sm">
-        <h5>Ajouter un nouveau club</h5>
-        <form th:action="@{/clubs/demander-creation}" method="post" id="clubForm">
-            <div class="mb-2">
-                <input name="nom" class="form-control" placeholder="Nom du club" required>
-            </div>
-            <div class="mb-2">
-                <input name="description" class="form-control" placeholder="Description" required>
-            </div>
-            <div class="mb-2">
-                <input name="objectifs" class="form-control" placeholder="Objectifs" required>
-            </div>
-
-            <h6>Membres du bureau</h6>
-            <div id="membresContainer">
-                <div class="membre-row mb-2 d-flex gap-2">
-                    <input name="emails" type="email" class="form-control email-field" placeholder="Email du membre" required>
-                    <input name="postes" type="text" class="form-control" placeholder="Poste" required>
-                    <button type="button" class="btn btn-danger btn-sm btn-remove">❌</button>
-                    <div class="text-danger email-error d-none">Email inexistant !</div>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-primary mb-2" id="btnAddMembre">➕ Ajouter un membre</button>
-            <br>
-            <button class="btn btn-success">Envoyer la demande</button>
-        </form>
-    </div>
-</div>
-
-</body>
-<footer class="bg-dark text-white text-center py-3 mt-auto">
-    <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
-</footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

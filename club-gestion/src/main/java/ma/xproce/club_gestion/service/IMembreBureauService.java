@@ -2,7 +2,6 @@ package ma.xproce.club_gestion.service;
 
 
 import lombok.RequiredArgsConstructor;
-import ma.xproce.club_gestion.dao.entities.Adherent;
 import ma.xproce.club_gestion.dao.entities.Evenement;
 import ma.xproce.club_gestion.dao.entities.MembreBureau;
 import ma.xproce.club_gestion.dao.entities.Utilisateur;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MembreBureauService {
+public class IMembreBureauService {
 
     private final MembreBureauRepository membreBureauRepository;
 

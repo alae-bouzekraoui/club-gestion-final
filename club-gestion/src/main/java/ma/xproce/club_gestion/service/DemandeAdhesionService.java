@@ -1,72 +1,48 @@
 package ma.xproce.club_gestion.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import ma.xproce.club_gestion.dao.entities.Adherent;
 import ma.xproce.club_gestion.dao.entities.Club;
 import ma.xproce.club_gestion.dao.entities.DemandeAdhesion;
 import ma.xproce.club_gestion.dao.entities.Utilisateur;
-import ma.xproce.club_gestion.dao.repositories.AdherentRepository;
 import ma.xproce.club_gestion.dao.repositories.ClubRepository;
 import ma.xproce.club_gestion.dao.repositories.DemandeAdhesionRepository;
 import ma.xproce.club_gestion.dao.repositories.UtilisateurRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-public class DemandeAdhesionService {
+public class DemandeAdhesionService implements IDemandeAdhesionService {
 
-    private final DemandeAdhesionRepository demandeAdhesionRepository;
-    private final ClubRepository clubRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final AdherentRepository adherentRepository; // Ajout nécessaire pour la validation
+    @Autowired
+    private DemandeAdhesionRepository demandeAdhesionRepository;
+    @Autowired
+    private ClubRepository clubRepository;
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
     @Transactional
-    public void creerDemandeAdhesion(
-            String nom,
-            String description,
-            String objectifs,
-            Long clubId,
-            Long utilisateurId) {
-
-
+    @Override
+    public void creerDemandeAdhesion(String nom, String desc, String obj, Long clubId, Long userId) {
         Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new EntityNotFoundException("Club non trouvé avec ID: " + clubId));
+                .orElseThrow(() -> new EntityNotFoundException("Club introuvable"));
+        Utilisateur user = utilisateurRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User introuvable"));
 
-        Utilisateur demandeur = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec ID: " + utilisateurId));
+        DemandeAdhesion demande = new DemandeAdhesion();
+        demande.setNom(nom);
+        demande.setDescription(desc);
+        demande.setObjectifs(obj);
+        demande.setStatut("EN_ATTENTE");
+        demande.setClub(club);
+        demande.setDemandeur(user);
 
-
-        Adherent adherent = adherentRepository.findById(utilisateurId).orElse(null);
-        if (adherent != null && club.getAdherents().contains(adherent)) {
-            throw new IllegalStateException("Vous êtes déjà adhérent de ce club.");
-        }
-
-        List<DemandeAdhesion> demandesExistantes = demandeAdhesionRepository
-                .findByClubIdAndDemandeurIdAndStatut(clubId, utilisateurId, "EN_ATTENTE");
-
-        if (!demandesExistantes.isEmpty()) {
-            throw new IllegalStateException("Vous avez déjà une demande en attente pour ce club.");
-        }
-
-        DemandeAdhesion demandeAdhesion = new DemandeAdhesion();
-        demandeAdhesion.setNom(nom);
-        demandeAdhesion.setDescription(description);
-        demandeAdhesion.setObjectifs(objectifs);
-        demandeAdhesion.setClub(club);
-        demandeAdhesion.setDemandeur(demandeur);
-
-        demandeAdhesion.setStatut("EN_ATTENTE");
-        demandeAdhesion.setDateDemande(LocalDateTime.now());
-
-        demandeAdhesionRepository.save(demandeAdhesion);
+        demandeAdhesionRepository.save(demande);
     }
 
-    public List<DemandeAdhesion> findByStatut(String statut){
+    @Override
+    public List<DemandeAdhesion> getDemandesParStatut(String statut) {
         return demandeAdhesionRepository.findByStatut(statut);
     }
 }

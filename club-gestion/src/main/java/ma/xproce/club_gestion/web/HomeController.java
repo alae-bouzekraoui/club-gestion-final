@@ -1,39 +1,36 @@
 package ma.xproce.club_gestion.web;
 
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpSession;
 import ma.xproce.club_gestion.dao.entities.*;
-import ma.xproce.club_gestion.dao.repositories.*;
 import ma.xproce.club_gestion.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@RequiredArgsConstructor
 public class HomeController {
 
-    private final UtilisateurService utilisateurService;
-    private final ClubRepository clubRepository;
-    private final AdherentRepository adherentRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final AdherentService adherentService;
-    private final MembreBureauService membreBureauService;
-    private final EvenementService evenementService;
-    private final MembreBureauRepository membreBureauRepository;
-    private final DemandeClubRepository demandeClubRepository;
-    private final DemandeAdhesionService demandeAdhesionService;
+    @Autowired
+    private UtilisateurService utilisateurService;
+    @Autowired
+    private AdherentService adherentService;
+    @Autowired
+    private IMembreBureauService membreBureauService;
+    @Autowired
+    private EvenementService evenementService;
+    @Autowired
+    private DemandeAdhesionService demandeAdhesionService;
+    @Autowired
+    private IClubService clubService;
 
 
     @GetMapping("/")
     public String home(Model model, HttpSession session) {
-        // Récupérer les clubs depuis la base de données
-        List<Club> clubs = clubRepository.findAll();
+        List<Club> clubs = clubService.getAllClubs();
         model.addAttribute("clubs", clubs);
 
         // Vérifier s'il y a un utilisateur connecté
@@ -68,7 +65,6 @@ public class HomeController {
             return "redirect:/";
 
         } catch (RuntimeException e) {
-            // Si ça casse (email déjà pris), ajouter le message d'erreur au modèle
             model.addAttribute("error", e.getMessage());
             return "signin";
         }
@@ -78,7 +74,6 @@ public class HomeController {
     @PostMapping("/signup")
     public String registerUser(@ModelAttribute Utilisateur user, HttpSession session, Model model) {
         try {
-            // Enregistrer l’utilisateur dans la base
             utilisateurService.registerNewUser(user);
             session.setAttribute("user", user);
             return "redirect:/";
@@ -102,86 +97,59 @@ public class HomeController {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
         if (user == null) return "redirect:/signin";
 
-        if (user instanceof Adherent adherent) {
-            model.addAttribute("clubs", adherent.getClubs());
-        } else {
-            model.addAttribute("clubs", List.of());
-        }
+        List<Club> mesClubs = adherentService.getClubsByAdherent(user.getId());
 
+        model.addAttribute("clubs", mesClubs);
         model.addAttribute("user", user);
         return "mes-clubs";
     }
 
 
-    @PostMapping("/clubs/{id}/adhesion")
-    public String adhererClub(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+    @PostMapping("/clubs/{clubId}/adhesion")
+    public String adhererClub(@PathVariable("clubId") Long clubId,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+
         Utilisateur user = (Utilisateur) session.getAttribute("user");
         if (user == null) return "redirect:/signin";
 
-        Club club = clubRepository.findById(id).get();
+        try {
+            Utilisateur updatedUser = clubService.rejoindreClub(clubId, user.getId());
 
-        if (user instanceof Adherent adherent) {
-            if (adherent.getClubs().stream().anyMatch(c -> c.getId().equals(club.getId()))) {
-                redirectAttributes.addFlashAttribute("message", "Vous êtes déjà membre de ce club !");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/";
-            }
+            // ✅ On met à jour la session avec l'objet tout frais (qui contient le bon rôle et le bon ID)
+            session.setAttribute("user", updatedUser);
 
-            adherent.getClubs().add(club);
-            adherentRepository.save(adherent);
-            club.getAdherents().add(adherent);
-            clubRepository.save(club);
-
-            session.setAttribute("user", adherent);
-            redirectAttributes.addFlashAttribute("message", "Vous avez rejoint le club " + club.getNom());
+            redirectAttributes.addFlashAttribute("message", "Félicitations, vous avez rejoint le club !");
             redirectAttributes.addFlashAttribute("messageType", "success");
-            return "redirect:/";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "warning");
         }
-
-        if (user instanceof MembreBureau membreBureau) {
-            if (membreBureau.getClubList().stream().anyMatch(c -> c.getId().equals(club.getId()))) {
-                redirectAttributes.addFlashAttribute("message", "Vous êtes déjà membre de ce club !");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/";
-            }
-
-            membreBureau.getClubList().add(club);
-            membreBureauRepository.save(membreBureau);
-            club.getMembreBureauList().add(membreBureau);
-            clubRepository.save(club);
-
-            session.setAttribute("user", membreBureau);
-            redirectAttributes.addFlashAttribute("message", "✅ Vous êtes désormais lié au club " + club.getNom() + " en tant que membre du bureau !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-            return "redirect:/";
-        }
-
-        //  Sinon : transformer l’utilisateur en Adhérent
-        Adherent newAdherent = new Adherent();
-        newAdherent.setNom(user.getNom());
-        newAdherent.setPrenom(user.getPrenom());
-        newAdherent.setEmail(user.getEmail());
-        newAdherent.setMotDePasse(user.getMotDePasse());
-        newAdherent.setRole("ADHERENT");
-
-        utilisateurRepository.deleteById(user.getId());
-        adherentRepository.save(newAdherent);
-
-        newAdherent.getClubs().add(club);
-        adherentRepository.save(newAdherent);
-        club.getAdherents().add(newAdherent);
-        clubRepository.save(club);
-
-        // Mettre à jour la session
-        session.setAttribute("user", newAdherent);
-
-        redirectAttributes.addFlashAttribute("message", " Vous êtes désormais membre du club " + club.getNom() + " !");
-        redirectAttributes.addFlashAttribute("messageType", "success");
 
         return "redirect:/";
     }
 
-    @PostMapping("/clubs/{clubId}/adhesion")
+    @PostMapping("/clubs/{clubId}/desadhesion")
+    public String desadhererClub(@PathVariable("clubId") Long clubId, HttpSession session, RedirectAttributes redirectAttributes) {
+
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) return "redirect:/signin";
+
+        try {
+            Utilisateur updatedUser = clubService.quitterClub(clubId, user.getId());
+            session.setAttribute("user", updatedUser);
+
+            redirectAttributes.addFlashAttribute("message", "Vous avez quitté le club avec succès.");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+
+        return "redirect:/mes-clubs";
+    }
+
+    @PostMapping("/clubs/{clubId}/demande-adhesion")
     public String creerDemandeAdhesion(@PathVariable("clubId") Long clubId,
                                        @RequestParam("nom") String nom,
                                        @RequestParam("description") String description,
@@ -189,31 +157,20 @@ public class HomeController {
                                        HttpSession session,
                                        RedirectAttributes redirectAttributes) {
 
-        Object userObj = session.getAttribute("user");
-        if (!(userObj instanceof Utilisateur userInSession)) {
-            redirectAttributes.addFlashAttribute("message", "Vous devez être connecté pour faire une demande.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("message", "Vous devez être connecté.");
             return "redirect:/signin";
         }
 
         try {
-            demandeAdhesionService.creerDemandeAdhesion(
-                    nom,
-                    description,
-                    objectifs,
-                    clubId,
-                    userInSession.getId()
-            );
+            demandeAdhesionService.creerDemandeAdhesion(nom, description, objectifs, clubId, user.getId());
 
-            redirectAttributes.addFlashAttribute("message", "Votre demande d'adhésion a été envoyée !");
+            redirectAttributes.addFlashAttribute("message", "Votre demande a été envoyée !");
             redirectAttributes.addFlashAttribute("messageType", "success");
-
-        } catch (EntityNotFoundException e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "warning");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
         }
 
         return "redirect:/clubs/" + clubId;
@@ -222,33 +179,14 @@ public class HomeController {
 
     @GetMapping("/calendrier")
     public String calendrier(HttpSession session, Model model) {
-
         Utilisateur user = (Utilisateur) session.getAttribute("user");
+
         if (user == null) return "redirect:/signin";
 
-        model.addAttribute("role", user.getRole());
-        List<Evenement> evenements = new ArrayList<>();
-
-        switch (user.getRole()) {
-
-            case "ADHERENT":
-                Adherent adherent = adherentService.getAdherentFromUser(user);
-                if (adherent != null) {
-                    evenements = adherentService.getListOfAdherentEvents(adherent);
-                }
-                break;
-
-            case "MembreBureau":
-                MembreBureau mb = membreBureauService.getMembreFromUser(user);
-                if (mb != null) {
-                    evenements = membreBureauService.getListOfEventsForMembre(mb);
-                }
-                break;
-        }
-
-        if (evenements == null) evenements = new ArrayList<>();
+        List<Evenement> evenements = evenementService.getEvenementsPourUtilisateur(user);
 
         model.addAttribute("user", user);
+        model.addAttribute("role", user.getRole());
         model.addAttribute("evenements", evenements);
 
         return "calendrier";
@@ -258,17 +196,11 @@ public class HomeController {
     @GetMapping("/clubs/{nom}")
     public String voirClub(@PathVariable String nom, Model model, HttpSession session) {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
-        Club club = clubRepository.findByNom(nom);
+        Club club = clubService.getClubParNom(nom);
+
+        boolean isAlreadyMember = clubService.estAdherentDuClub(user, club);
+
         model.addAttribute("club", club);
-
-        // Vérifier si l'utilisateur est déjà adhérent
-        boolean isAlreadyMember = false;
-            if (user instanceof Adherent) {
-                Adherent adherent = (Adherent) user;
-                isAlreadyMember = club.getAdherents().stream()
-                        .anyMatch(a -> a.getId().equals(adherent.getId()));
-            }
-
         model.addAttribute("isAlreadyMember", isAlreadyMember);
         model.addAttribute("user", user);
 
@@ -281,38 +213,17 @@ public class HomeController {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter pour accéder aux événements.");
+            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter.");
             redirectAttributes.addFlashAttribute("messageType", "warning");
             return "redirect:/signin";
         }
 
+        List<Evenement> evenements = evenementService.getEvenementsPourUtilisateur(user);
+
+        model.addAttribute("evenements", evenements);
+        model.addAttribute("user", user);
         model.addAttribute("role", user.getRole());
 
-        switch (user.getRole()) {
-            case "ADHERENT":
-                Adherent adherent = adherentService.getAdherentFromUser(user) ;
-                List<Club> clubsAdheres = adherent.getClubs();
-
-                if (clubsAdheres == null) {
-                    clubsAdheres = new ArrayList<>();
-                }
-                model.addAttribute("clubsAdheres", clubsAdheres);
-                break;
-
-            case "MembreBureau":
-                MembreBureau membre = membreBureauService.getMembreFromUser(user) ;
-                List<Club> clubsMembreBureau = membre.getClubList();
-                if (clubsMembreBureau == null) {
-                    clubsMembreBureau = new ArrayList<>();
-                }
-                model.addAttribute("clubsMembreBureau", clubsMembreBureau);
-                break;
-
-            default:
-
-                break;
-        }
-        model.addAttribute("user", user);
         return "evenements";
     }
 
@@ -323,21 +234,12 @@ public class HomeController {
             @RequestParam("clubId") Long clubId,
             RedirectAttributes redirectAttributes) {
 
-        Club club = clubRepository.findById(clubId)
-                .orElse(null);
-
-        if (club == null) {
-            redirectAttributes.addFlashAttribute("message", "Erreur : Club non trouvé.");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-            return "redirect:/evenements";
-        }
-
         try {
-            evenementService.ajouterEvenement(club, evenement);
+            evenementService.ajouterEvenement(clubId, evenement);
             redirectAttributes.addFlashAttribute("message", "Événement ajouté avec succès !");
             redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Une erreur est survenue lors de l'ajout.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
 
@@ -351,8 +253,8 @@ public class HomeController {
             evenementService.supprimerEvenement(id);
             redirectAttributes.addFlashAttribute("message", "Événement supprimé avec succès !");
             redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur lors de la suppression de l’événement.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
 
@@ -361,30 +263,30 @@ public class HomeController {
 
 
     @PostMapping("/evenements/Ajout_au_calendrier/{id}")
-    public String ajoutEvenemetCalendrier(
-            @PathVariable Long id,
-            RedirectAttributes redirectAttributes,
-            HttpSession session){
+    public String ajoutEvenemetCalendrier(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {
             return "redirect:/signin";
         }
-        Adherent adherent = adherentService.getAdherentFromUser(user);
-        boolean added = evenementService.ajoutEvenementCalendrier(id, adherent);
 
-        if (!added) {
-            redirectAttributes.addFlashAttribute("message", "Cet événement est déjà dans votre calendrier.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Événement ajouté à votre calendrier !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
+        try {
+            boolean added = evenementService.ajoutEvenementCalendrier(id, user.getId());
+
+            if (!added) {
+                redirectAttributes.addFlashAttribute("message", "Cet événement est déjà dans votre calendrier.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Événement ajouté à votre calendrier !");
+                redirectAttributes.addFlashAttribute("messageType", "success");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
         }
 
         return "redirect:/evenements";
-
     }
-
 
     @PostMapping("/evenements/supprimer_du_calendrier/{id}")
     public String removeEventFromCalendar(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
@@ -392,11 +294,14 @@ public class HomeController {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
         if (user == null) return "redirect:/signin";
 
-        Adherent adherent = adherentService.getAdherentFromUser(user);
-        boolean removed = evenementService.removeEventFromCalendar(id, adherent);
-
-        redirectAttributes.addFlashAttribute("message", "Événement retiré !");
-        redirectAttributes.addFlashAttribute("messageType", "success");
+        try {
+            evenementService.retirerEvenementDuCalendrier(id, user.getId());
+            redirectAttributes.addFlashAttribute("message", "Événement retiré avec succès !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Erreur lors du retrait : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
 
         return "redirect:/calendrier";
     }
@@ -411,63 +316,47 @@ public class HomeController {
 
 
     @PostMapping("/clubs/demander-creation")
-    public String createClubRequest(@RequestParam String nom,
-                                    @RequestParam String description,
-                                    @RequestParam String objectifs,
-                                    @RequestParam List<String> emails,
+    public String createClubRequest(@ModelAttribute DemandeClub demande,
+                                    @RequestParam("emails") List<String> emails,
                                     HttpSession session,
-                                    RedirectAttributes redirectAttributes) {
+                                    RedirectAttributes redirectAttributes,
+                                    Model model) {
 
         Utilisateur user = (Utilisateur) session.getAttribute("user");
+        if (user == null) return "redirect:/signin";
 
-        for (String email : emails) {
-            Utilisateur membre = utilisateurRepository.findByEmail(email);
-            if (membre == null) {
-                redirectAttributes.addFlashAttribute("message",
-                        "L'email " + email + " n'existe pas dans la base !");
-                redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/clubs/demander-creation";
-            }
+        try {
+            clubService.soumettreDemandeCreation(demande, emails, user.getId());
+            redirectAttributes.addFlashAttribute("message", "Votre demande pour le club '" + demande.getNom() + "' a été soumise avec succès !");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+
+            return "redirect:/mes-clubs";
+
+        } catch (RuntimeException e) {
+            model.addAttribute("demande", demande);
+            model.addAttribute("emailsSaisis", emails);
+            model.addAttribute("message", "Erreur : " + e.getMessage());
+            model.addAttribute("messageType", "danger");
+            model.addAttribute("user", user);
+
+            return "demander-creation";
         }
-
-        DemandeClub demande = new DemandeClub();
-        demande.setNom(nom);
-        demande.setDescription(description);
-        demande.setObjectifs(objectifs);
-        demande.setDemandeur(user);
-        demande.setStatut("EN_ATTENTE");
-
-        demande.setEmailsMembres(emails);
-        demandeClubRepository.save(demande);
-
-        redirectAttributes.addFlashAttribute("message",
-                "Votre demande de création du club '" + nom + "' a été soumise avec succès ! Elle sera examinée par un administrateur.");
-        redirectAttributes.addFlashAttribute("messageType", "success");
-
-        return "redirect:/mes-clubs";
     }
-
 
     @GetMapping("/gestion/demandes")
     public String showDemandesPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-        Object userObj = session.getAttribute("user");
-        if (userObj == null) {
+        // 1. Vérification de sécurité (Idéalement, vérifier si le rôle est ADMIN ou RESPONSABLE)
+        if (user == null) {
             redirectAttributes.addFlashAttribute("message", "Accès refusé.");
             redirectAttributes.addFlashAttribute("messageType", "danger");
             return "redirect:/";
         }
 
-        List<DemandeAdhesion> demandes = demandeAdhesionService.findByStatut("EN_ATTENTE");
+        List<DemandeAdhesion> demandes = demandeAdhesionService.getDemandesParStatut("EN_ATTENTE");
         model.addAttribute("demandesEnAttente", demandes);
-
-        // Gérer les messages flash (si une demande vient d'être acceptée/refusée)
-        if (session.getAttribute("message") != null) {
-            model.addAttribute("message", session.getAttribute("message"));
-            model.addAttribute("messageType", session.getAttribute("messageType"));
-            session.removeAttribute("message");
-            session.removeAttribute("messageType");
-        }
+        model.addAttribute("user", user);
 
         return "gestion-demandes";
     }

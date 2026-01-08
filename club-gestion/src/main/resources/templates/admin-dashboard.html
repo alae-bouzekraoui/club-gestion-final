@@ -125,9 +125,9 @@
         <div class="d-flex align-items-center gap-3">
             <th:block th:if="${user != null}">
                 <span class="text-light fw-semibold fs-5">
-                    👤 <strong th:text="${user.prenom + ' ' + user.nom}"></strong>
+                    <strong th:text="${user.prenom}"></strong>
                 </span>
-                <a href="/logout" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm">
+                <a href="/logout" class="btn btn-danger fw-semibold px-4 py-2 rounded-pill shadow-sm">
                     Déconnexion
                 </a>
             </th:block>
@@ -136,13 +136,13 @@
 </nav>
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">📋 Tableau de bord Admin</h2>
+    <h1 class="text-center mb-4">Tableau de bord Admin</h1>
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
     <hr>
 
-    <h5 class="mt-4">Clubs existants :</h5>
+    <h5 class="mt-4 mb-4">Clubs existants :</h5>
     <table class="table">
         <thead>
         <tr>
@@ -178,6 +178,9 @@
         </tbody>
     </table>
 </div>
-
+<footer class="bg-dark text-white text-center py-3"
+        style="position: fixed; bottom: 0; left: 0; width: 100%;">
+    <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
+</footer>
 </body>
 </html>
