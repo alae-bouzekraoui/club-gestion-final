@@ -19,8 +19,6 @@ public class ClubGestionApplication implements CommandLineRunner {
     @Autowired
     private DemandeClubRepository demandeClubRepository;
 
-
-
     public static void main(String[] args) {
         SpringApplication.run(ClubGestionApplication.class, args);
     }
@@ -30,14 +28,12 @@ public class ClubGestionApplication implements CommandLineRunner {
         if (utilisateurRepository.findByEmail("admin@ecole.ma") == null) {
             utilisateurRepository.save(new Utilisateur(null, "Admin", "Admin", "admin@ecole.ma", "1234", "ADMIN"));
         }
-
     }
 
     @Bean
     CommandLineRunner start(ClubRepository clubRepository) {
         return args -> {
             if (clubRepository.count() == 0) {
-                // Création du Club Informatique
                 Club informatique = new Club();
                 informatique.setNom("Club Informatique");
                 informatique.setDescription("Découverte du développement et de l’IA");
@@ -45,7 +41,6 @@ public class ClubGestionApplication implements CommandLineRunner {
                 informatique.setDateCreation("2022-09-10");
                 clubRepository.save(informatique);
 
-                // Création du Club Sportif
                 Club sportif = new Club();
                 sportif.setNom("Club Sportif");
                 sportif.setDescription("Promotion du sport à l’école");
@@ -53,7 +48,6 @@ public class ClubGestionApplication implements CommandLineRunner {
                 sportif.setDateCreation("2021-11-01");
                 clubRepository.save(sportif);
 
-                // Création du Club Théâtre
                 Club theatre = new Club();
                 theatre.setNom("Club Théâtre");
                 theatre.setDescription("Passionnés de scène et d’expression orale");
@@ -61,7 +55,6 @@ public class ClubGestionApplication implements CommandLineRunner {
                 theatre.setDateCreation("2023-03-05");
                 clubRepository.save(theatre);
 
-                // Création du Club Musique
                 Club musique = new Club();
                 musique.setNom("Club Musique");
                 musique.setDescription("Groupe de musiciens amateurs");

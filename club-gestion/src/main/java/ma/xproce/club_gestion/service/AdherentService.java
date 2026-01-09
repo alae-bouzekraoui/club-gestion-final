@@ -1,6 +1,5 @@
 package ma.xproce.club_gestion.service;
 
-import lombok.RequiredArgsConstructor;
 import ma.xproce.club_gestion.dao.entities.Adherent;
 import ma.xproce.club_gestion.dao.entities.Club;
 import ma.xproce.club_gestion.dao.entities.Evenement;

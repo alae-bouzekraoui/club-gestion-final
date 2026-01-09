@@ -6,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f4f7f6; min-height: 100vh; display: flex; flex-direction: column; }
+        body { background: radial-gradient(circle at top, #eaf2ff, #f4f7f6); min-height: 100vh; display: flex; flex-direction: column; }
         main { flex: 1; }
         /* Navigation */
         .hover-underline {
@@ -46,6 +46,43 @@
                 transform: translateY(0);
             }
         }
+        .club-card {
+            border-radius: 15px;
+            overflow: hidden;
+            border: none;
+            background: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .club-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .club-img {
+            height: 120px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .club-card:hover .club-img {
+            transform: scale(1.05);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+        }
+
+        .card-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .btn-outline-primary {
+            border-radius: 20px;
+            padding: 6px 18px;
+        }
+
     </style>
 </head>
 <body>
@@ -131,23 +168,43 @@
     <p class="lead text-muted">Découvrez nos clubs scolaires : un espace d’expression, de créativité et de passion !</p>
 </section>
 
-<!-- Section des clubs -->
 <div class="container mt-1 mb-5">
-    <h2 class="text-center mb-4">Nos Clubs</h2>
-    <div class="row">
-        <div class="col-md-4 mb-4" th:each="club : ${clubs}">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${club.nom}">Nom du club</h5>
-                    <p class="card-text" th:text="${club.description}">Description du club</p>
-                    <a th:href="@{'/clubs/' + ${club.nom}}" class="btn btn-primary">Voir plus</a>
+    <h2 class="text-center mb-4 fw-bold">Nos Clubs</h2>
+
+    <div class="row g-4">
+        <div class="col-md-4" th:each="club : ${clubs}">
+            <div class="card club-card h-100">
+
+                <!-- Image aléatoire -->
+                <img th:src="@{'https://picsum.photos/400/250?random=' + ${club.id}}"
+                     class="card-img-top club-img"
+                     alt="Image du club">
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary fw-semibold"
+                        th:text="${club.nom}">
+                        Nom du club
+                    </h5>
+
+                    <p class="card-text text-muted flex-grow-1"
+                       th:text="${club.description}">
+                        Description du club
+                    </p>
+
+                    <a th:href="@{'/clubs/' + ${club.nom}}"
+                       class="btn btn-outline-primary mt-3 align-self-start">
+                        Voir plus →
+                    </a>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<!-- Pied de page -->
+
+
+
 <footer class="bg-dark text-white text-center py-3"
         style="position: fixed; bottom: 0; left: 0; width: 100%;">
     <small>&copy; 2025 ENSAM Casablanca - Tous droits réservés</small>
