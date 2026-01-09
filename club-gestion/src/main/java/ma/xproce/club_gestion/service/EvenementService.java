@@ -112,4 +112,44 @@ public class EvenementService implements IEvenementService {
         adherentRepository.save(adherent);
     }
 
+    @Transactional
+    public Evenement createEvenement(Evenement evenement) {
+        if (evenement == null) {
+            throw new RuntimeException("L'événement ne peut pas être null");
+        }
+        if (evenement.getTitre() == null || evenement.getTitre().isBlank()) {
+            throw new RuntimeException("Le titre de l'événement est obligatoire");
+        }
+        if (evenement.getClub() == null) {
+            throw new RuntimeException("L'événement doit être associé à un club");
+        }
+        return evenementRepository.save(evenement);
+    }
+
+    @Transactional
+    public void deleteEvenement(Long evenementId) {
+        if (!evenementRepository.existsById(evenementId)) {
+            throw new RuntimeException("L'événement avec l'ID " + evenementId + " n'existe pas");
+        }
+        evenementRepository.deleteById(evenementId);
+    }
+
+    public Evenement getEvenementById(Long evenementId) {
+        return evenementRepository.findById(evenementId)
+                .orElseThrow(() -> new RuntimeException("Événement non trouvé avec l'ID : " + evenementId));
+    }
+
+    @Transactional
+    public void addEvenementToUserCalendar(Utilisateur user, Evenement evenement) {
+        if (!(user instanceof Adherent)) {
+            throw new RuntimeException("Seuls les adhérents peuvent ajouter des événements à leur calendrier");
+        }
+
+        Adherent adherent = (Adherent) user;
+        if (!adherent.getEvenements().contains(evenement)) {
+            adherent.getEvenements().add(evenement);
+            adherentRepository.save(adherent);
+        }
+    }
+
 }

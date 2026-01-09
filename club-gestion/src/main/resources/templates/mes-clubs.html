@@ -85,10 +85,6 @@
                         <a class="nav-link hover-underline fw-semibold" href="/mes-clubs">🏅 Mes Clubs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link hover-underline fw-semibold" href="/calendrier">📅 Mon Calendrier</a>
-                    </li>
-                    <!-- 🔹 Nouveau lien Événements -->
-                    <li class="nav-item">
                         <a class="nav-link hover-underline fw-semibold" href="/evenements">🎉 Événements</a>
                     </li>
                 </th:block>
@@ -105,7 +101,7 @@
             </th:block>
 
             <th:block th:if="${user != null}">
-                <th:block th:if="${user.role == 'MembreBureau' }">
+                <th:block th:if="${user.role == 'MEMBREBUREAU' }">
                     <a href="/gestion/demandes"
                        class="btn btn-outline-light rounded-pill position-relative"
                        title="Gérer les demandes">

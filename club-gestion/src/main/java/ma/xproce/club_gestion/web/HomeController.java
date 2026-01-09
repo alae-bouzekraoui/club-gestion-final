@@ -116,7 +116,6 @@ public class HomeController {
         try {
             Utilisateur updatedUser = clubService.rejoindreClub(clubId, user.getId());
 
-            // ✅ On met à jour la session avec l'objet tout frais (qui contient le bon rôle et le bon ID)
             session.setAttribute("user", updatedUser);
 
             redirectAttributes.addFlashAttribute("message", "Félicitations, vous avez rejoint le club !");
@@ -177,21 +176,6 @@ public class HomeController {
     }
 
 
-    @GetMapping("/calendrier")
-    public String calendrier(HttpSession session, Model model) {
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-
-        if (user == null) return "redirect:/signin";
-
-        List<Evenement> evenements = evenementService.getEvenementsPourUtilisateur(user);
-
-        model.addAttribute("user", user);
-        model.addAttribute("role", user.getRole());
-        model.addAttribute("evenements", evenements);
-
-        return "calendrier";
-    }
-
 
     @GetMapping("/clubs/{nom}")
     public String voirClub(@PathVariable String nom, Model model, HttpSession session) {
@@ -205,105 +189,6 @@ public class HomeController {
         model.addAttribute("user", user);
 
         return "club-details";
-    }
-
-
-    @GetMapping("/evenements")
-    public String showEvenements(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-
-        if (user == null) {
-            redirectAttributes.addFlashAttribute("message", "Veuillez vous connecter.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
-            return "redirect:/signin";
-        }
-
-        List<Evenement> evenements = evenementService.getEvenementsPourUtilisateur(user);
-
-        model.addAttribute("evenements", evenements);
-        model.addAttribute("user", user);
-        model.addAttribute("role", user.getRole());
-
-        return "evenements";
-    }
-
-
-    @PostMapping("/evenements/add")
-    public String addEvenement(
-            @ModelAttribute Evenement evenement,
-            @RequestParam("clubId") Long clubId,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            evenementService.ajouterEvenement(clubId, evenement);
-            redirectAttributes.addFlashAttribute("message", "Événement ajouté avec succès !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-
-        return "redirect:/evenements";
-    }
-
-
-    @PostMapping("/evenements/supprimer/{id}")
-    public String supprimerEvenement(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            evenementService.supprimerEvenement(id);
-            redirectAttributes.addFlashAttribute("message", "Événement supprimé avec succès !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-
-        return "redirect:/evenements";
-    }
-
-
-    @PostMapping("/evenements/Ajout_au_calendrier/{id}")
-    public String ajoutEvenemetCalendrier(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-
-        if (user == null) {
-            return "redirect:/signin";
-        }
-
-        try {
-            boolean added = evenementService.ajoutEvenementCalendrier(id, user.getId());
-
-            if (!added) {
-                redirectAttributes.addFlashAttribute("message", "Cet événement est déjà dans votre calendrier.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-            } else {
-                redirectAttributes.addFlashAttribute("message", "Événement ajouté à votre calendrier !");
-                redirectAttributes.addFlashAttribute("messageType", "success");
-            }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-
-        return "redirect:/evenements";
-    }
-
-    @PostMapping("/evenements/supprimer_du_calendrier/{id}")
-    public String removeEventFromCalendar(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
-
-        Utilisateur user = (Utilisateur) session.getAttribute("user");
-        if (user == null) return "redirect:/signin";
-
-        try {
-            evenementService.retirerEvenementDuCalendrier(id, user.getId());
-            redirectAttributes.addFlashAttribute("message", "Événement retiré avec succès !");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Erreur lors du retrait : " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-
-        return "redirect:/calendrier";
     }
 
 

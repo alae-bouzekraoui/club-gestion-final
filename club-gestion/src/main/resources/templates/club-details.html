@@ -141,34 +141,61 @@
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h4 class="fw-bold mb-4 text-dark">Prochains Événements</h4>
-                <div class="d-flex align-items-center p-3 border border-light-subtle rounded-3 mb-2 hover-light transition-all shadow-sm">
+                <h4 class="fw-bold mb-4 text-dark">Événements passés</h4>
+
+                <div th:if="${#lists.isEmpty(club.evenementList)}" class="text-center p-4 border border-light-subtle rounded-3 mb-2">
+                    <p class="mb-0 text-muted">Aucun événement enregistré pour ce club.</p>
+                </div>
+
+                <div th:each="event : ${club.evenementList}" th:if="${event.date.isBefore(T(java.time.LocalDate).now())}" class="d-flex align-items-center p-3 border border-light-subtle rounded-3 mb-3 hover-scale transition-all shadow-sm">
                     <div class="bg-primary text-white text-center rounded px-3 py-2 me-3">
-                        <small class="d-block text-uppercase fw-bold">Jan</small>
-                        <strong class="fs-4">15</strong>
+                        <small class="d-block text-uppercase fw-bold" th:text="${#temporals.format(event.date,'MMM')}"></small>
+                        <strong class="fs-4" th:text="${#temporals.format(event.date,'dd')}"></strong>
                     </div>
                     <div>
-                        <h6 class="mb-0 fw-bold">Atelier Innovation Tech</h6>
-                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>Salle de conférence - 14:00</small>
+                        <h6 class="mb-0 fw-bold" th:text="${event.titre}"></h6>
+                        <p class="mb-1 text-muted small" th:text="${event.description}"></p>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(event.date,'dd/MM/yyyy')}"></span></small>
                     </div>
-                    <button class="btn btn-sm btn-primary ms-auto rounded-pill px-3">S'inscrire</button>
+                    <div class="ms-auto">
+                        <span class="badge bg-secondary text-white rounded-pill">Terminé</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 p-4">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-0 fw-bold">Responsable Club</h6>
-                        <small class="text-muted">Contact principal</small>
-                    </div>
+                <div th:if="${club.membreBureauList != null}">
+                    <th:block th:each="mb : ${club.membreBureauList}">
+                        <div th:if="${#strings.equalsIgnoreCase(mb.poste,'President') or #strings.equalsIgnoreCase(mb.poste,'Président')}">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" th:text="${mb.prenom + ' ' + mb.nom}"></h6>
+                                    <small class="text-muted" th:text="${mb.poste}"></small>
+                                </div>
+                            </div>
+
+                            <p class="mb-1"><strong>Contact :</strong> <a th:href="${'mailto:' + mb.email}" th:text="${mb.email}"></a></p>
+                        </div>
+                    </th:block>
                 </div>
 
-                <p class="small text-muted mt-3">Pour toute question, contactez le bureau via l'espace membre.</p>
+                <div th:if="${club.membreBureauList == null or #lists.isEmpty(club.membreBureauList)}">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Responsable Club</h6>
+                            <small class="text-muted">Contact principal</small>
+                        </div>
+                    </div>
+                    <p class="small text-muted mt-3">Pour toute question, contactez le bureau via l'espace membre.</p>
+                </div>
             </div>
         </div>
     </div>

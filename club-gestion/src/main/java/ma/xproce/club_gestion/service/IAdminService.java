@@ -12,6 +12,6 @@ public interface IAdminService {
 
     // Gestion des Demandes
     List<DemandeClub> getDemandesEnAttente();
-    void accepterDemande(Long demandeId);
+    void accepterDemande(Long demandeId, String poste);
     void refuserDemande(Long demandeId, String commentaire);
 }

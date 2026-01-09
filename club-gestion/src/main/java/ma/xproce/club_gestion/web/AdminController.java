@@ -40,8 +40,8 @@ public class AdminController {
     }
 
     @PostMapping("/admin/demandes/{id}/accepter")
-    public String accepterDemande(@PathVariable Long id, RedirectAttributes ra) {
-        adminService.accepterDemande(id);
+    public String accepterDemande(@PathVariable Long id, @RequestParam(required = false) String poste, RedirectAttributes ra) {
+        adminService.accepterDemande(id, poste);
         ra.addFlashAttribute("message", "Club accepté avec succès !");
         ra.addFlashAttribute("messageType", "success");
         return "redirect:/admin/demandes";

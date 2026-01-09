@@ -6,59 +6,72 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        :root{
+            --primary-800: #0b3566;
+            --primary-500: #1e6fb3;
+            --accent: #ffbf3b;
+            --muted: #6c757d;
+            --card-bg: #ffffff;
+            --surface: #f5f8fb;
+        }
+
         body {
-            background: radial-gradient(circle at top, #eaf2ff, #f4f7f6);
+            background: linear-gradient(180deg, var(--surface) 0%, #f0f4fb 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            color: #263238;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
         }
-        main {
-            flex: 1;
+
+        main { flex: 1; }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(90deg, var(--primary-800), var(--primary-500));
         }
-        .hover-underline {
-            position: relative;
-            color: #f8f9fa !important;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        .hover-underline::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 3px;
-            left: 0;
-            bottom: -4px;
-            background-color: #ffc107;
-            transition: width 0.3s;
-        }
+
+        .hover-underline { position: relative; color: #f8f9fa !important; text-decoration: none; }
+        .hover-underline::after { content: ''; position: absolute; width: 0; height: 3px; left: 0; bottom: -6px; background-color: var(--accent); transition: width 0.25s; }
         .hover-underline:hover::after { width: 100%; }
-        .hover-underline:hover { color: #ffc107 !important; }
-        .transition-all {
-            transition: all 0.3s ease-in-out;
-        }
-        .transition-all:hover {
-            transform: scale(1.08);
-        }
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(6px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1050;
-        }
 
-        .modal-container {
-            width: 100%;
-            max-width: 400px;
-            animation: fadeIn 0.3s ease;
+        /* Buttons */
+        .btn-primary-custom {
+            background: linear-gradient(180deg, var(--primary-500), var(--primary-800));
+            border: none; color: #fff;
+            box-shadow: 0 6px 18px rgba(30,111,179,0.12);
         }
+        .btn-outline-danger { border-radius: 6px; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.92);
+            border-radius: 12px;
+            border: 1px solid rgba(16,24,40,0.04);
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .card .card-footer { background: transparent; }
+
+        /* Header gradient with better contrast */
+        .card-header.bg-gradient{ padding: 0.85rem 1rem; border-radius: 0.6rem 0.6rem 0 0; background: linear-gradient(135deg, #2a5aa7 0%, #1e4f8f 60%); }
+        .card-header .h5, .card-header .h4{ color: #fff; }
+
+        /* For very light background use subtle shadow and slightly elevated card */
+        .card.elevated { box-shadow: 0 8px 28px rgba(16,24,40,0.08); }
+
+        /* Hover effects */
+        .hover-scale:hover{ transform: translateY(-6px); box-shadow: 0 10px 30px rgba(16,24,40,0.12); transition: all 0.22s ease; }
+
+        /* Modal */
+        .modal-overlay{ position: fixed; inset: 0; background: rgba(8,15,30,0.5); display: flex; align-items: center; justify-content: center; z-index: 1050; }
+        .modal-container{ width: 100%; max-width: 520px; border-radius: 12px; padding: 1.25rem; background: #fff; box-shadow: 0 18px 60px rgba(2,6,23,0.18); }
+
+        /* Utility */
+        .text-primary { color: var(--primary-500) !important; }
+        .small.text-muted{ color: var(--muted) !important; }
+
+        @media (max-width: 576px){
+            .modal-container{ margin: 1rem; }
         }
     </style>
 </head>
@@ -81,10 +94,6 @@
                     <li class="nav-item">
                         <a th:classappend="${activePage == 'mes-clubs'} ? 'text-warning' : ''"
                            class="nav-link hover-underline fw-semibold" href="/mes-clubs">🏅 Mes Clubs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:classappend="${activePage == 'calendrier'} ? 'text-warning' : ''"
-                           class="nav-link hover-underline fw-semibold" href="/calendrier">📅 Mon Calendrier</a>
                     </li>
                     <li class="nav-item">
                         <a th:classappend="${activePage == 'evenements'} ? 'text-warning' : ''"
@@ -145,72 +154,100 @@
         <div th:if="${role == 'ADHERENT'}">
             <h2 class="text-2xl font-bold mb-4 text-gray-800">Événements de vos clubs</h2>
 
-            <div th:each="club : ${clubsAdheres}" class="mb-6 bg-white p-4 rounded-xl shadow">
-                <h3 class="text-xl font-semibold text-blue-600 mb-3" th:text="${club.nom}"></h3>
+            <div th:if="${#lists.isEmpty(clubsAdheres)}" class="alert alert-info text-center">
+                <p class="mb-0">Vous n'êtes adhérent d'aucun club.</p>
+            </div>
 
-                <div th:if="${#lists.isEmpty(club.evenementList)}">
-                    <p class="text-gray-500">Aucun événement pour ce club.</p>
+            <div th:each="club : ${clubsAdheres}" class="mb-6 bg-white rounded-lg shadow-sm border border-light overflow-hidden">
+                <div class="bg-light px-4 py-3 border-bottom">
+                    <h3 class="h4 fw-bold text-primary mb-0">
+                        <i class="bi bi-building"></i> <span th:text="${club.nom}"></span>
+                    </h3>
+                    <p class="text-muted small mb-0 mt-1" th:if="${club.description}" th:text="${club.description}"></p>
                 </div>
 
-                <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(club.evenementList)}">
-                    <div class="col" th:each="event : ${club.evenementList}">
-                        <div class="card h-100 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary fw-semibold" th:text="${event.titre}"></h5>
-                                <p class="card-text text-secondary" th:text="${event.description}"></p>
-                                <p class="small text-muted mb-1">
-                                    📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
-                                </p>
-                            </div>
+                <div class="p-4">
+                    <div th:if="${#lists.isEmpty(club.evenementList)}" class="text-center py-4">
+                        <p class="text-muted">Aucun événement pour ce club.</p>
+                    </div>
 
-                            <div class="card-footer bg-transparent border-0 text-end">
-                                <form th:action="@{/evenements/Ajout_au_calendrier/{id}(id=${event.id})}" method="post">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        Ajout_au_calendrier
-                                    </button>
-                                </form>
-                            </div>
+                    <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(club.evenementList)}">
+                        <div class="col" th:each="event : ${club.evenementList}">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary fw-semibold" th:text="${event.titre}"></h5>
+                                    <p class="card-text text-secondary" th:text="${event.description}"></p>
+                                    <p class="small text-muted mb-1">
+                                        📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
+                                    </p>
+                                </div>
 
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="container my-5" th:if="${role == 'MembreBureau'}">
+        <div class="container my-5" th:if="${role == 'MEMBREBUREAU'}">
 
-            <h2 class="text-center text-primary mb-5">Clubs et leurs Événements</h2>
+            <div class="mb-4">
+                <h2 class="text-center text-primary fw-bold mb-1">
+                    <i class="bi bi-calendar-event"></i> Gestion des Événements
+                </h2>
+                <p class="text-center text-muted">Gérez les événements de vos clubs</p>
+            </div>
 
-            <div th:each="club : ${clubsMembreBureau}" class="mb-5">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="h4 fw-semibold text-primary mb-0" th:text="${club.nom}"></h3>
-                    <button class="btn btn-success btn-sm"
-                            th:attr="data-club-id=${club.id}"
-                            onclick="openModal(this)">
-                        ➕ Ajouter un événement
-                    </button>
+            <div th:if="${#lists.isEmpty(clubsMembreBureau)}" class="alert alert-info text-center">
+                <p class="mb-0">Vous n'êtes membre d'aucun club en tant que membre du bureau.</p>
+            </div>
+
+            <div th:each="club : ${clubsMembreBureau}" class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="h5 fw-bold text-black mb-0">
+                                <i class="bi bi-building"></i> <span th:text="${club.nom}"></span>
+                            </h3>
+                            <small class="text-black-50" th:if="${club.description}" th:text="${club.description}"></small>
+                        </div>
+                        <button class="btn btn-light btn-sm fw-semibold"
+                                th:attr="data-club-id=${club.id}"
+                                onclick="openModal(this)">
+                            <i class="bi bi-plus-circle"></i> Ajouter événement
+                        </button>
+                    </div>
                 </div>
 
-                <div th:if="${#lists.isEmpty(club.evenementList)}">
-                    <p class="text-muted fst-italic">Aucun événement encore créé.</p>
-                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(club.evenementList)}" class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 2.5rem; color: #ddd;"></i>
+                        <p class="text-muted mt-2">Aucun événement créé pour ce club</p>
+                    </div>
 
-                <div class="row row-cols-1 row-cols-md-3 g-4" th:if="${!#lists.isEmpty(club.evenementList)}">
-                    <div class="col" th:each="event : ${club.evenementList}">
-                        <div class="card h-100 shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary fw-semibold" th:text="${event.titre}"></h5>
-                                <p class="card-text text-secondary" th:text="${event.description}"></p>
-                                <p class="small text-muted mb-1">
-                                    📅 <span th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
-                                </p>
-                            </div>
-                            <div class="card-footer bg-transparent border-0 text-end">
-                                <form th:action="@{/evenements/supprimer/{id}(id=${event.id})}" method="post">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        🗑️ Supprimer
-                                    </button>
-                                </form>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" th:if="${!#lists.isEmpty(club.evenementList)}">
+                        <div class="col" th:each="event : ${club.evenementList}">
+                            <div class="card h-100 border-0 shadow-sm hover-scale" style="transition: transform 0.2s, box-shadow 0.2s;">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary fw-semibold mb-2" th:text="${event.titre}">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </h5>
+                                    <p class="card-text text-secondary small" th:text="${event.description}"></p>
+
+                                    <div class="d-flex align-items-center gap-2 mt-3">
+                                        <i class="bi bi-calendar2-date text-danger"></i>
+                                        <span class="small text-muted" th:text="${#temporals.format(event.date, 'dd/MM/yyyy')}"></span>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer bg-transparent border-top pt-2">
+                                    <form th:action="@{/evenements/supprimer/{id}(id=${event.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')">
+                                            <i class="bi bi-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>

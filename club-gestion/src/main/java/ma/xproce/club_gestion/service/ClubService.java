@@ -125,4 +125,21 @@ public class ClubService implements  IClubService{
         demandeClubRepository.save(demande);
     }
 
+    public List<Club> getClubsByAdherent(Long adherentId) {
+        Adherent adherent = adherentRepository.findById(adherentId)
+                .orElseThrow(() -> new RuntimeException("Adhérent non trouvé"));
+        return adherent.getClubs();
+    }
+
+    public List<Club> getClubsByMembreBureau(Long membreBureauId) {
+        MembreBureau membreBureau = membreBureauRepository.findById(membreBureauId)
+                .orElseThrow(() -> new RuntimeException("Membre du bureau non trouvé"));
+        return membreBureau.getClubList();
+    }
+
+    public Club getClubById(Long clubId) {
+        return clubRepository.findById(clubId)
+                .orElseThrow(() -> new RuntimeException("Club non trouvé avec l'ID : " + clubId));
+    }
+
 }
