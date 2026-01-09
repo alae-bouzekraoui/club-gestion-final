@@ -35,15 +35,42 @@ public class ClubGestionApplication implements CommandLineRunner {
 
     @Bean
     CommandLineRunner start(ClubRepository clubRepository) {
-       return args -> {
+        return args -> {
             if (clubRepository.count() == 0) {
-                clubRepository.save(new Club(null, "Club Informatique", "Découverte du développement et de l’IA", "Encourager l’innovation et la collaboration", "2022-09-10", null, null, null, null, null));
-                clubRepository.save(new Club(null, "Club Sportif", "Promotion du sport à l’école", "Renforcer la cohésion et la santé", "2021-11-01", null, null, null, null, null));
-                clubRepository.save(new Club(null, "Club Théâtre", "Passionnés de scène et d’expression orale", "Favoriser la créativité et la confiance", "2023-03-05", null, null, null, null, null));
-                clubRepository.save(new Club(null, "Club Musique", "Groupe de musiciens amateurs", "Développer le talent artistique des étudiants", "2020-12-12", null, null, null, null, null));
+                // Création du Club Informatique
+                Club informatique = new Club();
+                informatique.setNom("Club Informatique");
+                informatique.setDescription("Découverte du développement et de l’IA");
+                informatique.setObjectifs("Encourager l’innovation et la collaboration");
+                informatique.setDateCreation("2022-09-10");
+                clubRepository.save(informatique);
+
+                // Création du Club Sportif
+                Club sportif = new Club();
+                sportif.setNom("Club Sportif");
+                sportif.setDescription("Promotion du sport à l’école");
+                sportif.setObjectifs("Renforcer la cohésion et la santé");
+                sportif.setDateCreation("2021-11-01");
+                clubRepository.save(sportif);
+
+                // Création du Club Théâtre
+                Club theatre = new Club();
+                theatre.setNom("Club Théâtre");
+                theatre.setDescription("Passionnés de scène et d’expression orale");
+                theatre.setObjectifs("Favoriser la créativité et la confiance");
+                theatre.setDateCreation("2023-03-05");
+                clubRepository.save(theatre);
+
+                // Création du Club Musique
+                Club musique = new Club();
+                musique.setNom("Club Musique");
+                musique.setDescription("Groupe de musiciens amateurs");
+                musique.setObjectifs("Développer le talent artistique des étudiants");
+                musique.setDateCreation("2020-12-12");
+                clubRepository.save(musique);
             }
             demandeClubRepository.deleteAll();
-       };
+        };
     }
 
 }
