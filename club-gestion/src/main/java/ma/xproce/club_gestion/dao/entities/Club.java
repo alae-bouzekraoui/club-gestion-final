@@ -25,11 +25,16 @@ public class Club {
             joinColumns = @JoinColumn(name = "club_id"),
             inverseJoinColumns = @JoinColumn(name = "adherent_id")
     )
+    @ToString.Exclude
     private List<Adherent> adherents = new ArrayList<>();
 
     //relation club-membreBureau
     @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<MembreBureau> membreBureauList = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<MembreBureau> membreBureauAdheranList = new ArrayList<>();
 
     @OneToMany(mappedBy = "club",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Evenement> evenementList = new ArrayList<>();

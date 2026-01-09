@@ -10,4 +10,8 @@ public interface DemandeAdhesionRepository extends JpaRepository<DemandeAdhesion
     List<DemandeAdhesion> findByClubIdAndDemandeurIdAndStatut(Long clubId, Long utilisateurId, String enAttente);
 
     List<DemandeAdhesion> findByStatut(String statut);
+
+    List<DemandeAdhesion> findByClubIdAndStatut(Long clubId, String enAttente);
+
+    List<DemandeAdhesion> findByClubIdInAndStatut(List<Long> clubIds, String enAttente);
 }
